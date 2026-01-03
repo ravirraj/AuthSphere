@@ -17,12 +17,25 @@ const developerSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       trim: true,
     },
-    refreshToken: {
+    picture: {
+      type: String, 
+      default: "",
+    },
+    provider: {
       type: String,
-      default: null,
+      enum: ["local", "Google", "GitHub", "Discord"],
+      default: "local",
+    },
+    providerId: {
+      type: String,
+      unique: true,
+      sparse: true, 
+    },
+    refreshToken: { 
+      type: String, 
+      default: null 
     },
     refreshTokenExpiry: {
       type: Date,
