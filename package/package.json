@@ -1,0 +1,19 @@
+{
+  "name": "authsphere",
+  "version": "0.1.0",
+  "description": "Simple auth SDK to redirect users to a hosted login page",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": ["auth", "login", "sdk", "redirect"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

@@ -2,43 +2,25 @@ import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, "Project name is required"],
-      trim: true,
-    },
-
-    publicKey: {
-      type: String,
-      required: [true, "Public key is required"],
-      trim: true,
-      unique: true,
-    },
-
-    privateKey: {
-      type: String,
-      required: [true, "Private key is required"],
-      trim: true,
-      unique: true,
-    },
-
-    developer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Developer",
-      required: true,
-    },
+    name: { type: String, required: true, trim: true },
+    publicKey: { type: String, required: true, unique: true, trim: true },
+    privateKey: { type: String, required: true, unique: true, trim: true },
+    developer: { type: mongoose.Schema.Types.ObjectId, ref: "Developer", required: true },
+    redirectUris: [{ type: String, required: true }],
+    providers: [{ type: String, enum: ["google", "github", "discord"], required: true }],
+    logoUrl: { type: String },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    metadata: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true }
 );
 
-// Hide private key from every API response
 projectSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.privateKey;
   return obj;
 };
 
-// Prevent duplicate project name per developer
 projectSchema.index({ developer: 1, name: 1 }, { unique: true });
 
 const Project = mongoose.model("Project", projectSchema);

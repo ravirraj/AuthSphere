@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { FolderPlus } from "lucide-react";
+import { toast } from "sonner";
 
 import { createProject } from "@/api/ProjectAPI";
 
@@ -13,21 +15,35 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import { FolderPlus } from "lucide-react";
-
 const CreateProjectModal = ({ open, onClose, onCreated }) => {
   const [name, setName] = useState("");
+  const [redirectUri, setRedirectUri] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /* Reset when modal closes */
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setRedirectUri("");
+      setLoading(false);
+    }
+  }, [open]);
+
   const handleCreate = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || !redirectUri.trim()) return;
 
     try {
       setLoading(true);
-      const res = await createProject({ name });
+
+      const res = await createProject({
+        name: name.trim(),
+        redirectUris: [redirectUri.trim()],
+        providers: ["google"], // 👈 REQUIRED
+      });
 
       if (res?.success) {
         setName("");
+        setRedirectUri("");
         onCreated();
         onClose();
       }
@@ -45,16 +61,29 @@ const CreateProjectModal = ({ open, onClose, onCreated }) => {
             Create Project
           </DialogTitle>
           <DialogDescription>
-            Give your project a clear and unique name.
+            Projects represent applications that will use AuthSphere authentication.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <Input
-            placeholder="Project name"
+            autoFocus
+            placeholder="Project name (e.g. My SaaS App)"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={loading}
           />
+
+          <Input
+            placeholder="Redirect URI (e.g. http://localhost:3000/callback)"
+            value={redirectUri}
+            onChange={(e) => setRedirectUri(e.target.value)}
+            disabled={loading}
+          />
+
+          <p className="text-xs text-muted-foreground">
+            OAuth redirects will only be allowed to this URI.
+          </p>
         </div>
 
         <DialogFooter>
@@ -66,9 +95,12 @@ const CreateProjectModal = ({ open, onClose, onCreated }) => {
             Cancel
           </Button>
 
-          <Button onClick={handleCreate} disabled={loading}>
+          <Button
+            onClick={handleCreate}
+            disabled={loading || !name.trim() || !redirectUri.trim()}
+          >
             <FolderPlus className="h-4 w-4 mr-2" />
-            {loading ? "Creating..." : "Create"}
+            {loading ? "Creating..." : "Create Project"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -6,21 +6,31 @@ import crypto from "crypto";
 ============================================================ */
 export const createProject = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, redirectUris, providers, logoUrl } = req.body;
     const developerId = req.developer._id;
 
-    if (!name) {
-      return res.status(400).json({ success: false, message: "Project name is required" });
-    }
+    if (!name)
+      return res
+        .status(400)
+        .json({ success: false, message: "Project name is required" });
+    if (
+      !redirectUris ||
+      !Array.isArray(redirectUris) ||
+      redirectUris.length === 0
+    )
+      return res
+        .status(400)
+        .json({ success: false, message: "Redirect URIs are required" });
+    if (!providers || !Array.isArray(providers) || providers.length === 0)
+      return res
+        .status(400)
+        .json({ success: false, message: "At least one provider is required" });
 
-    // Check if duplicate project name under same dev
     const exists = await Project.findOne({ name, developer: developerId });
-    if (exists) {
-      return res.status(409).json({
-        success: false,
-        message: "A project with this name already exists",
-      });
-    }
+    if (exists)
+      return res
+        .status(409)
+        .json({ success: false, message: "Project already exists" });
 
     const publicKey = crypto.randomBytes(16).toString("hex");
     const privateKey = crypto.randomBytes(32).toString("hex");
@@ -30,12 +40,15 @@ export const createProject = async (req, res) => {
       publicKey,
       privateKey,
       developer: developerId,
+      redirectUris,
+      providers,
+      logoUrl,
     });
 
     return res.status(201).json({
       success: true,
       message: "Project created successfully",
-      data: project,
+      data: project, // privateKey hidden by model
     });
   } catch (err) {
     console.error("Create Project Error:", err);
@@ -75,7 +88,9 @@ export const getProject = async (req, res) => {
     });
 
     if (!project) {
-      return res.status(404).json({ success: false, message: "Project not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
     }
 
     return res.status(200).json({ success: true, data: project });
@@ -107,7 +122,9 @@ export const updateProject = async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Project not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
     }
 
     return res.status(200).json({ success: true, data: updated });
@@ -135,7 +152,9 @@ export const rotateKeys = async (req, res) => {
     );
 
     if (!project) {
-      return res.status(404).json({ success: false, message: "Project not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
     }
 
     return res.status(200).json({
@@ -163,7 +182,9 @@ export const deleteProject = async (req, res) => {
     });
 
     if (!project) {
-      return res.status(404).json({ success: false, message: "Project not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
     }
 
     return res.status(200).json({

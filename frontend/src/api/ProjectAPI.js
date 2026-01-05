@@ -1,42 +1,90 @@
 import api from "./axios";
 
 /**
- * Base endpoint for projects
- * (relative to axios baseURL)
+ * Base endpoint for project-related operations
  */
 const PROJECTS_URL = "/projects";
 
 /* ------------------- GET ALL PROJECTS ------------------- */
 export const getProjects = async () => {
-  const { data } = await api.get(PROJECTS_URL);
-  return data;
+  try {
+    const { data } = await api.get(PROJECTS_URL);
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
 };
 
 /* ------------------- GET SINGLE PROJECT ------------------- */
 export const getProject = async (projectId) => {
-  const { data } = await api.get(`${PROJECTS_URL}/${projectId}`);
-  return data;
+  try {
+    const { data } = await api.get(`${PROJECTS_URL}/${projectId}`);
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
 };
 
 /* ------------------- CREATE PROJECT ------------------- */
 export const createProject = async (payload) => {
-  const { data } = await api.post(PROJECTS_URL, payload);
-  return data;
+  try {
+    const { data } = await api.post(PROJECTS_URL, payload);
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
 };
 
-/* ------------------- UPDATE PROJECT (PARTIAL) ------------------- */
+/* ------------------- UPDATE PROJECT ------------------- */
 export const updateProject = async (projectId, payload) => {
-  const { data } = await api.patch(
-    `${PROJECTS_URL}/${projectId}`,
-    payload
-  );
-  return data;
+  try {
+    const { data } = await api.patch(
+      `${PROJECTS_URL}/${projectId}`,
+      payload
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+};
+
+/* ------------------- ROTATE PROJECT KEYS ------------------- */
+export const rotateProjectKeys = async (projectId) => {
+  try {
+    const { data } = await api.post(
+      `${PROJECTS_URL}/${projectId}/rotate-keys`
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
 };
 
 /* ------------------- DELETE PROJECT ------------------- */
 export const deleteProject = async (projectId) => {
-  const { data } = await api.delete(
-    `${PROJECTS_URL}/${projectId}`
-  );
-  return data;
+  try {
+    const { data } = await api.delete(
+      `${PROJECTS_URL}/${projectId}`
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+};
+
+/* ========================================================
+   Error Normalization Helper
+======================================================== */
+const normalizeError = (error) => {
+  if (error?.response?.data) {
+    return new Error(
+      error.response.data.message || "Request failed"
+    );
+  }
+
+  if (error?.message) {
+    return new Error(error.message);
+  }
+
+  return new Error("Unexpected error occurred");
 };
