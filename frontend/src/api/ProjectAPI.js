@@ -60,6 +60,18 @@ export const rotateProjectKeys = async (projectId) => {
   }
 };
 
+/* ------------------- GET PROJECT USERS ------------------- */
+export const getProjectUsers = async (projectId) => {
+  try {
+    const { data } = await api.get(
+      `${PROJECTS_URL}/${projectId}/users`
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+};
+
 /* ------------------- DELETE PROJECT ------------------- */
 export const deleteProject = async (projectId) => {
   try {

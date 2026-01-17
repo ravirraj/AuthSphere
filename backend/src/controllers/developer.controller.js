@@ -1,4 +1,6 @@
 import Developer from "../models/developer.model.js";
+import Project from "../models/project.model.js";
+import EndUser from "../models/endUsers.models.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { conf } from "../configs/env.js";
@@ -179,4 +181,39 @@ export const getCurrentDeveloper = async (req, res) => {
     data: req.developer,
     message: "Developer profile fetched successfully",
   });
+};
+
+/* ---------------------- DASHBOARD STATS ---------------------- */
+export const getDashboardStats = async (req, res) => {
+    try {
+        const developerId = req.developer._id;
+
+        // Count projects
+        const totalProjects = await Project.countDocuments({ developer: developerId });
+
+        // Get all project IDs for this developer
+        const projects = await Project.find({ developer: developerId }).select('_id');
+        const projectIds = projects.map(p => p._id);
+
+        // Count end users across all those projects
+        const totalEndUsers = await EndUser.countDocuments({ projectId: { $in: projectIds } });
+
+        // Get latest end users
+        const recentUsers = await EndUser.find({ projectId: { $in: projectIds } })
+            .select('email username createdAt projectId')
+            .populate('projectId', 'name')
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                totalProjects,
+                totalEndUsers,
+                recentUsers
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 };

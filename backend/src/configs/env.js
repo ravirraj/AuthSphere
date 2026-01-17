@@ -2,6 +2,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const requiredEnvVars = [
+  "MONGODB_URI",
+  "ACCESS_TOKEN_SECRET",
+  "REFRESH_TOKEN_SECRET"
+];
+
+const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
+
+if (missingVars.length > 0) {
+  console.error(`❌ Missing required environment variables: ${missingVars.join(", ")}`);
+  process.exit(1);
+}
+
 const _conf = {
   port: String(process.env.PORT || 8000),
   mongodbUri: String(process.env.MONGODB_URI),

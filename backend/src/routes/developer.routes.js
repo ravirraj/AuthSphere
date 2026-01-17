@@ -4,7 +4,8 @@ import {
   loginDeveloper, 
   logoutDeveloper, 
   refreshAccessToken,
-  getCurrentDeveloper 
+  getCurrentDeveloper,
+  getDashboardStats,
 } from "../controllers/developer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -15,6 +16,7 @@ router.route("/login").post(loginDeveloper);
 router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/logout").post(verifyJWT, logoutDeveloper);
-router.route("/me").get(verifyJWT, getCurrentDeveloper); 
+router.route("/me").get(verifyJWT, getCurrentDeveloper);
+router.route("/stats").get(verifyJWT, getDashboardStats); 
 
 export default router;

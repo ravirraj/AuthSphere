@@ -1,24 +1,34 @@
-// backend/src/controllers/auth.controller.js
 import Developer from "../models/developer.model.js";
 import EndUser from "../models/endUsers.models.js";
 import { getGoogleAuthURL, getGoogleUser } from "../services/google.service.js";
 import { getGithubAuthURL, getGithubUser } from "../services/github.service.js";
 import { getDiscordAuthURL, getDiscordUser } from "../services/discord.service.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
-import { handleSDKCallback } from "./sdk.controller.js";
+import { handleSDKCallback, authRequests } from "./sdk.controller.js";
 import bcrypt from "bcrypt";
 import fetch from "node-fetch";
+import crypto from "crypto";
 
-const handleSocialAuth = async (res, userData, cli, req) => {
-  // Check if this is an SDK request
-  const sdkRequest = req.query.sdk_request;
-  
+/* ============================================================
+   SOCIAL AUTH HANDLER
+============================================================ */
+/* ============================================================
+   SOCIAL AUTH HANDLER
+============================================================ */
+const handleSocialAuth = async (res, req, userData, context = {}) => {
+  const { sdkRequest, cli } = context;
+
+  console.log("🔗 handleSocialAuth Context:", context);
+
+  // ---------- SDK FLOW ----------
+  // Prioritize context.sdkRequest over req.query.sdk_request to avoid ambiguity
   if (sdkRequest) {
-    // Handle SDK flow differently
-    return await handleSDKFlow(res, userData, req);
+    console.log("🔁 SDK login detected:", sdkRequest);
+    return await handleSDKFlow(res, req, userData, sdkRequest);
   }
 
-  // Regular developer authentication flow
+  // ---------- REGULAR DEVELOPER LOGIN ----------
+  console.log("🔁 Developer login detected:", userData.email);
   let developer = await Developer.findOne({ email: userData.email });
 
   if (!developer) {
@@ -26,7 +36,7 @@ const handleSocialAuth = async (res, userData, cli, req) => {
     let username = baseUsername;
 
     while (await Developer.findOne({ username })) {
-      username = baseUsername + Math.floor(Math.random() * 1000);
+      username = baseUsername + Math.floor(Math.random() * 10000);
     }
 
     developer = await Developer.create({
@@ -44,173 +54,230 @@ const handleSocialAuth = async (res, userData, cli, req) => {
   developer.refreshToken = refreshToken;
   await developer.save({ validateBeforeSave: false });
 
-  const options = {
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
-  res.cookie("accessToken", accessToken, options);
-  res.cookie("refreshToken", refreshToken, options);
+  res.cookie("accessToken", accessToken, cookieOptions);
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 
-  if (cli === "true") {
-    await fetch(
-      `http://localhost:5001/cli-update?name=${developer.username}&email=${developer.email}&id=${developer._id}&provider=${userData.provider}`
-    );
-    return res.send("<script>window.close();</script>");
+  // ---------- CLI LOGIN ----------
+  if (cli === "true" || cli === true) {
+    try {
+      await fetch(
+        `http://localhost:5001/cli-update?name=${developer.username}&email=${developer.email}&id=${developer._id}&provider=${userData.provider}`
+      );
+      return res.send("<script>window.close();</script>");
+    } catch (error) {
+      console.error("CLI callback failed:", error);
+      return res.send("<script>window.close();</script>");
+    }
   }
 
+  // ---------- REDIRECT DEVELOPER ----------
   return res.redirect("http://localhost:5173/dashboard");
 };
 
-const handleSDKFlow = async (res, userData, req) => {
+/* ============================================================
+   SDK FLOW
+============================================================ */
+const handleSDKFlow = async (res, req, userData, explicitSdkRequestId) => {
   try {
-    const { authCodes } = await import("./sdk.controller.js");
-    const authData = authCodes.get(req.query.sdk_request);
+    const sdkRequestId = explicitSdkRequestId || req.query.sdk_request;
+    const authRequest = authRequests.get(sdkRequestId);
 
-    if (!authData) {
-      return res.status(400).send("Invalid SDK request");
+    if (!authRequest) {
+      console.error("❌ SDK Request not found for ID:", sdkRequestId);
+      return res.status(400).send("Invalid or expired SDK request");
     }
 
-    // Find or create end user in the project
+    // ---------- FIND OR CREATE END USER ----------
+    console.log("🔍 Looking for EndUser...");
     let endUser = await EndUser.findOne({
       email: userData.email,
-      projectId: authData.projectId,
+      projectId: authRequest.projectId,
     });
 
     if (!endUser) {
-      // Generate a random password for OAuth users
-      const randomPassword = await bcrypt.hash(
-        Math.random().toString(36),
-        10
-      );
+      console.log("👤 EndUser not found, creating new one...");
+      const randomPassword = await bcrypt.hash(Math.random().toString(36) + Date.now(), 10);
 
-      // Generate unique username within project
       let baseUsername = userData.username || userData.email.split("@")[0];
       let username = baseUsername;
 
       while (
-        await EndUser.findOne({
-          username,
-          projectId: authData.projectId,
-        })
+        await EndUser.findOne({ username, projectId: authRequest.projectId })
       ) {
-        username = baseUsername + Math.floor(Math.random() * 1000);
+        username = baseUsername + Math.floor(Math.random() * 10000);
       }
 
       endUser = await EndUser.create({
         email: userData.email,
         username,
         password: randomPassword,
-        projectId: authData.projectId,
+        projectId: authRequest.projectId,
       });
+      console.log("✨ EndUser created:", endUser._id);
+    } else {
+        console.log("✅ EndUser found:", endUser._id);
     }
 
-    // Use the SDK callback handler
-    return await handleSDKCallback(req, res, endUser, userData.provider);
-  } catch (error) {
-    console.error("SDK Flow Error:", error);
-    return res.status(500).send("Authentication failed");
+    // ---------- CALL SDK CALLBACK ----------
+    // IMPORTANT: Set req.query.sdk_request for handleSDKCallback to use if it relies on it
+    req.query.sdk_request = sdkRequestId;
+    console.log("📞 Calling handleSDKCallback with requestId:", sdkRequestId);
+    return await handleSDKCallback(req, res, endUser, userData.provider, sdkRequestId);
+  } catch (err) {
+    console.error("SDK Flow Error:", err);
+    return res.status(500).send("Authentication failed. Please try again.");
   }
 };
 
-/* ---------------------- GOOGLE ---------------------- */
+const getContextFromReq = (req) => {
+    if (req.query.sdk === 'true') {
+        return { type: 'sdk', sdk_request: req.query.sdk_request };
+    }
+    if (req.query.cli === 'true') {
+        return { type: 'cli' };
+    }
+    return { type: 'dev' };
+};
+
+/* ============================================================
+   GOOGLE
+============================================================ */
 export async function googleLogin(req, res) {
   try {
-    const url = getGoogleAuthURL();
+    const context = getContextFromReq(req);
+    console.log("🚀 Google Login Context:", context);
+    const url = getGoogleAuthURL(context);
     res.redirect(url);
   } catch (err) {
+    console.error("Google login error:", err);
     res.status(500).send("Could not start Google login");
   }
 }
 
 export async function googleCallback(req, res) {
   try {
-    const { code, cli } = req.query;
-    if (!code) return res.status(400).send("Missing code");
+    const { code, state } = req.query;
+    console.log(`📥 Google Callback - Code: ${!!code}, State: ${state}`);
+
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    // Parse state to restore context
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+        context.sdkRequest = state.split(':')[1];
+    }
+    console.log("🧩 Parsed Parse Context:", context);
 
     const googleUser = await getGoogleUser(code);
+    console.log("✅ Google user:", googleUser.email);
 
-    await handleSocialAuth(
-      res,
-      {
-        email: googleUser.email,
-        username: googleUser.name,
-        picture: googleUser.picture,
-        provider: "Google",
-        providerId: googleUser.sub,
-      },
-      cli,
-      req
-    );
+    await handleSocialAuth(res, req, {
+      email: googleUser.email,
+      username: googleUser.name,
+      picture: googleUser.picture,
+      provider: "Google",
+      providerId: googleUser.sub,
+    }, context);
   } catch (err) {
     console.error("Google callback error:", err);
     res.status(500).send("Google authentication failed");
   }
 }
 
-/* ---------------------- GITHUB ---------------------- */
+/* ============================================================
+   GITHUB
+============================================================ */
 export async function githubLogin(req, res) {
   try {
-    const url = getGithubAuthURL();
+    const context = getContextFromReq(req);
+    console.log("🚀 GitHub Login Context:", context);
+    const url = getGithubAuthURL(context);
     res.redirect(url);
   } catch (err) {
+    console.error("GitHub login error:", err);
     res.status(500).send("Could not start GitHub login");
   }
 }
 
 export async function githubCallback(req, res) {
   try {
-    const { code, cli } = req.query;
-    if (!code) return res.status(400).send("Missing code");
+    const { code, state } = req.query;
+    console.log(`📥 GitHub Callback - Code: ${!!code}, State: ${state}`);
+
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+        context.sdkRequest = state.split(':')[1];
+    }
+    console.log("🧩 Parsed GitHub Context:", context);
 
     const githubUser = await getGithubUser(code);
-    await handleSocialAuth(
-      res,
-      {
-        email: githubUser.email,
-        username: githubUser.login,
-        picture: githubUser.avatar_url,
-        provider: "GitHub",
-        providerId: String(githubUser.id),
-      },
-      cli,
-      req
-    );
+    console.log("✅ GitHub user:", githubUser.email);
+
+    await handleSocialAuth(res, req, {
+      email: githubUser.email,
+      username: githubUser.login,
+      picture: githubUser.avatar,
+      provider: "GitHub",
+      providerId: String(githubUser.id),
+    }, context);
   } catch (err) {
+    console.error("GitHub callback error:", err);
     res.status(500).send("GitHub authentication failed");
   }
 }
 
-/* ---------------------- DISCORD ---------------------- */
+/* ============================================================
+   DISCORD
+============================================================ */
 export async function discordLogin(req, res) {
   try {
-    const url = getDiscordAuthURL();
+    const context = getContextFromReq(req);
+    console.log("🚀 Discord Login Context:", context);
+    const url = getDiscordAuthURL(context);
     res.redirect(url);
   } catch (err) {
+    console.error("Discord login error:", err);
     res.status(500).send("Could not start Discord login");
   }
 }
 
 export async function discordCallback(req, res) {
   try {
-    const { code, cli } = req.query;
-    if (!code) return res.status(400).send("Missing code");
+    const { code, state } = req.query;
+    console.log(`📥 Discord Callback - Code: ${!!code}, State: ${state}`);
+
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+        context.sdkRequest = state.split(':')[1];
+    }
+    console.log("🧩 Parsed Discord Context:", context);
 
     const discordUser = await getDiscordUser(code);
-    await handleSocialAuth(
-      res,
-      {
-        email: discordUser.email,
-        username: discordUser.username,
-        picture: `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`,
-        provider: "Discord",
-        providerId: discordUser.id,
-      },
-      cli,
-      req
-    );
+    console.log("✅ Discord user:", discordUser.email);
+
+    await handleSocialAuth(res, req, {
+      email: discordUser.email,
+      username: discordUser.username,
+      picture: discordUser.avatar,
+      provider: "Discord",
+      providerId: discordUser.id,
+    }, context);
   } catch (err) {
+    console.error("Discord callback error:", err);
     res.status(500).send("Discord authentication failed");
   }
 }

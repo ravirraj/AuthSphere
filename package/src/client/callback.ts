@@ -12,8 +12,7 @@ import {
 } from "../utils/storage";
 import type { AuthResponse } from "../types";
 
-const DEFAULT_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
-const DEFAULT_BASE_URL = "https://api.authsphere.com";
+const DEFAULT_BASE_URL = "http://localhost:8000";
 
 export async function handleAuthCallback(): Promise<AuthResponse | null> {
   const params = new URLSearchParams(window.location.search);
@@ -21,14 +20,16 @@ export async function handleAuthCallback(): Promise<AuthResponse | null> {
   const state = params.get("state");
   const error = params.get("error");
 
+  // ✅ CHECK FOR ERROR RESPONSE
   if (error) {
     const errorDescription = params.get("error_description") || "Authentication failed";
     throw new AuthError(`${error}: ${errorDescription}`);
   }
 
+  // ✅ NO CODE = NOT A CALLBACK
   if (!code) return null;
 
-  // CSRF protection
+  // ✅ CSRF PROTECTION - VERIFY STATE
   const storedState = getState();
   if (!storedState || state !== storedState) {
     clearState();
@@ -36,12 +37,14 @@ export async function handleAuthCallback(): Promise<AuthResponse | null> {
   }
   clearState();
 
-  // PKCE code verifier
+  // ✅ PKCE CODE VERIFIER
   const codeVerifier = getCodeVerifier();
-  if (!codeVerifier) throw new AuthError("Missing code verifier - invalid flow");
+  if (!codeVerifier) {
+    throw new AuthError("Missing code verifier - invalid flow");
+  }
   clearCodeVerifier();
 
-  // Config
+  // ✅ GET CONFIG
   const { publicKey, redirectUri, baseUrl } = getConfig();
 
   if (!publicKey || !redirectUri) {
@@ -51,6 +54,8 @@ export async function handleAuthCallback(): Promise<AuthResponse | null> {
   const tokenUrl = `${(baseUrl || DEFAULT_BASE_URL).replace(/\/$/, "")}/sdk/token`;
 
   try {
+    console.log("🔄 Exchanging authorization code for tokens...");
+
     const res = await fetch(tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -63,29 +68,45 @@ export async function handleAuthCallback(): Promise<AuthResponse | null> {
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new AuthError(errorData.message || "Token exchange failed");
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = { message: `HTTP ${res.status}: Token exchange failed` };
+      }
+      throw new AuthError(errorData.message || errorData.error_description || "Token exchange failed");
     }
 
-    const data = (await res.json().catch(() => ({}))) as AuthResponse;
+    let data: AuthResponse;
+    try {
+      data = await res.json();
+    } catch {
+      throw new AuthError("Invalid JSON response from server");
+    }
 
+    // ✅ VALIDATE RESPONSE STRUCTURE
     if (!data || !data.accessToken || !data.user) {
+      console.error("Invalid token response:", data);
       throw new AuthError("Invalid token response from server");
     }
 
-    // Store tokens and user
+    // ✅ STORE TOKENS AND USER
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
     setUser(data.user);
 
-    const expiresAt = Date.now() + DEFAULT_TOKEN_EXPIRY; // 24h from now
+    // Use expiresAt from server or calculate default
+    const expiresAt = data.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
     setExpiresAt(expiresAt);
 
-    // Clean URL
+    console.log("✓ Authentication successful:", data.user.email);
+
+    // ✅ CLEAN URL (REMOVE QUERY PARAMS)
     window.history.replaceState({}, document.title, window.location.pathname);
 
     return data;
   } catch (err) {
+    console.error("Token exchange error:", err);
     if (err instanceof AuthError) throw err;
     throw new AuthError(`Authentication failed: ${(err as Error).message}`);
   }

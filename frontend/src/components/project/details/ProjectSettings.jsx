@@ -25,9 +25,9 @@ const ProjectSettings = ({ project, onUpdated }) => {
   );
 
   const [providers, setProviders] = useState({
-    google: project.providers?.google ?? true,
-    github: project.providers?.github ?? true,
-    discord: project.providers?.discord ?? true,
+    google: project.providers?.includes("google") ?? false,
+    github: project.providers?.includes("github") ?? false,
+    discord: project.providers?.includes("discord") ?? false,
   });
 
   const [saving, setSaving] = useState(false);
@@ -50,12 +50,17 @@ const ProjectSettings = ({ project, onUpdated }) => {
     try {
       setSaving(true);
 
+      const activeProviders = Object.keys(providers).filter(p => providers[p]);
+
+      if (activeProviders.length === 0) {
+        toast.error("At least one provider must be enabled");
+        return;
+      }
+
       const payload = {
         name,
-        settings: {
-          redirectUris: redirectUris.filter(Boolean),
-          providers,
-        },
+        redirectUris: redirectUris.filter(Boolean),
+        providers: activeProviders,
       };
 
       const res = await updateProject(project._id, payload);

@@ -1,4 +1,5 @@
 import Project from "../models/project.model.js";
+import EndUser from "../models/endUsers.models.js";
 import crypto from "crypto";
 
 /* ============================================================
@@ -108,7 +109,7 @@ export const updateProject = async (req, res) => {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    const allowedUpdates = ["name", "settings"]; // prevent modifying keys manually
+    const allowedUpdates = ["name", "settings", "redirectUris", "providers"]; // prevent modifying keys manually
     const updates = {};
 
     for (const key of allowedUpdates) {
@@ -193,6 +194,39 @@ export const deleteProject = async (req, res) => {
     });
   } catch (err) {
     console.error("Delete Project Error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* ============================================================
+   GET PROJECT USERS
+============================================================ */
+export const getProjectUsers = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+    const { projectId } = req.params;
+
+    // 1. Verify project belongs to developer
+    const project = await Project.findOne({
+      _id: projectId,
+      developer: developerId,
+    });
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    // 2. Fetch users
+    const users = await EndUser.find({ projectId }).select("-password").sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
+  } catch (err) {
+    console.error("Get Project Users Error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

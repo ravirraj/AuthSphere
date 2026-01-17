@@ -9,6 +9,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 import { deleteProject } from "@/api/ProjectAPI";
 
@@ -22,10 +23,17 @@ const ProjectDangerZone = ({ project }) => {
 
     if (!confirmed) return;
 
-    const res = await deleteProject(project._id);
+    try {
+      const res = await deleteProject(project._id);
 
-    if (res?.success) {
-      navigate("/dashboard");
+      if (res?.success) {
+        toast.success("Project deleted successfully");
+        navigate("/dashboard");
+      } else {
+        toast.error(res?.message || "Failed to delete project");
+      }
+    } catch (err) {
+      toast.error(err.message || "Server error");
     }
   };
 

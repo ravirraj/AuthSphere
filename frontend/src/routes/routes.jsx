@@ -4,6 +4,7 @@ import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register"; // ADD THIS
 import Dashboard from "@/pages/Dashboard";
+import Documentation from "@/pages/Documentation";
 
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
@@ -15,6 +16,14 @@ export const routes = [
     element: (
       <MainLayout>
         <Home />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/docs",
+    element: (
+      <MainLayout>
+        <Documentation />
       </MainLayout>
     ),
   },

@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "diagnose": "node scripts/diagnose.js",
+    "test:env": "node -e \"console.log('Environment check passed')\" && node scripts/diagnose.js"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +25,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.1",
     "morgan": "^1.10.1",
+    "node-fetch": "^3.3.2",
     "qs": "^6.14.1"
   },
   "devDependencies": {

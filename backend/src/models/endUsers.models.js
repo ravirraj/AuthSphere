@@ -35,12 +35,10 @@ const endUserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Automate password hashing before saving
-endUserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+endUserSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 endUserSchema.index({ projectId: 1, email: 1 }, { unique: true });

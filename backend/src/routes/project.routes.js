@@ -5,7 +5,8 @@ import {
   getProject,
   updateProject,
   deleteProject,
-  rotateKeys, // ADD THIS IMPORT
+  rotateKeys,
+  getProjectUsers,
 } from "../controllers/project.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -28,8 +29,11 @@ router.get("/:projectId", getProject);
 // ✏ Update project (PATCH = partial update)
 router.patch("/:projectId", updateProject);
 
-// 🔄 Rotate project keys - ADD THIS ROUTE
+// 🔄 Rotate project keys
 router.post("/:projectId/rotate-keys", rotateKeys);
+
+// 👥 Get project users
+router.get("/:projectId/users", getProjectUsers);
 
 // 🗑 Delete project
 router.delete("/:projectId", deleteProject);

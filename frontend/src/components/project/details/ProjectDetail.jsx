@@ -6,6 +6,7 @@ import ProjectDetailHeader from "./ProjectDetailHeader";
 import ProjectKeysCard from "./ProjectKeysCard";
 import ProjectSettings from "./ProjectSettings";
 import ProjectDangerZone from "./ProjectDangerZone";
+import ProjectUsersCard from "./ProjectUsersCard";
 import ProjectDetailSkeleton from "./ProjectDetailSkeleton";
 
 import { Card } from "@/components/ui/card";
@@ -66,7 +67,12 @@ const ProjectDetail = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <ProjectDetailHeader project={project} />
 
-      <ProjectKeysCard project={project} />
+      <ProjectKeysCard
+        project={project}
+        onKeysRotated={loadProject}
+      />
+
+      <ProjectUsersCard projectId={projectId} />
 
       <ProjectSettings
         project={project}

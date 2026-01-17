@@ -2,11 +2,22 @@ import axios from "axios";
 import qs from "qs";
 import { conf } from "../configs/env.js";
 
-
 /**
  * Returns Google OAuth 2.0 authorization URL
+ * @param {object} context
+ * @param {"dev" | "sdk" | "cli"} context.type
+ * @param {string} [context.sdk_request]
  */
-export function getGoogleAuthURL() {
+export function getGoogleAuthURL(context = { type: "dev" }) {
+  let state = "dev";
+
+  if (context.type === "sdk" && context.sdk_request) {
+    state = `sdk:${context.sdk_request}`;
+  }
+
+  if (context.type === "cli") {
+    state = "cli";
+  }
 
   const params = new URLSearchParams({
     client_id: conf.GOOGLE_CLIENT_ID,
@@ -15,11 +26,12 @@ export function getGoogleAuthURL() {
     scope: "openid email profile",
     access_type: "offline",
     prompt: "consent",
+    state, // 🔥 REQUIRED
   });
 
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-  return url;
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
+
 
 /**
  * Exchanges authorization code for access token and fetches user info
