@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { conf } from "../configs/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import DeveloperSession from "../models/developerSession.model.js";
+import { parseUserAgent } from "../utils/userAgentParser.js";
+import axios from "axios";
 
 // ✅ CONSISTENT COOKIE OPTIONS
 const getCookieOptions = () => ({
@@ -86,6 +89,39 @@ export const loginDeveloper = async (req, res) => {
     developer.refreshToken = refreshToken;
     await developer.save({ validateBeforeSave: false });
 
+    // Create session record
+    try {
+      const userAgent = req.headers['user-agent'] || '';
+      const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      
+      let location = { city: "Unknown", country: "Unknown", countryCode: "???" };
+      try {
+        // Optional geolocation - using a free service (ipapi.co is limited but works for demo)
+        const geoResponse = await axios.get(`https://ipapi.co/${ipAddress}/json/`).catch(() => null);
+        if (geoResponse && geoResponse.data && !geoResponse.data.error) {
+          location = {
+            city: geoResponse.data.city,
+            country: geoResponse.data.country_name,
+            countryCode: geoResponse.data.country_code
+          };
+        }
+      } catch (geoError) {
+        console.error("Geo lookup failed:", geoError.message);
+      }
+
+      await DeveloperSession.create({
+        developer: developer._id,
+        refreshToken: refreshToken,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceInfo: parseUserAgent(userAgent),
+        location: location,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days matching cookie
+      });
+    } catch (sessionError) {
+      console.error("Failed to create developer session:", sessionError.message);
+    }
+
     const options = getCookieOptions();
 
     return res
@@ -133,6 +169,20 @@ export const refreshAccessToken = async (req, res) => {
     developer.refreshToken = newRefreshToken;
     await developer.save({ validateBeforeSave: false });
 
+    // Update existing session record with new refresh token
+    try {
+      await DeveloperSession.findOneAndUpdate(
+        { refreshToken: incomingRefreshToken, developer: developer._id },
+        { 
+          refreshToken: newRefreshToken, 
+          lastActive: new Date(),
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) 
+        }
+      );
+    } catch (sessionError) {
+      console.error("Failed to update developer session on refresh:", sessionError.message);
+    }
+
     const options = getCookieOptions();
 
     return res
@@ -157,6 +207,19 @@ export const logoutDeveloper = async (req, res) => {
     { $set: { refreshToken: null } },
     { new: true }
   );
+
+  // Invalidate current session
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (refreshToken) {
+      await DeveloperSession.findOneAndUpdate(
+        { refreshToken: refreshToken, developer: req.developer._id },
+        { isValid: false }
+      );
+    }
+  } catch (error) {
+    console.error("Logout session invalidation error:", error);
+  }
 
   const options = getCookieOptions();
 

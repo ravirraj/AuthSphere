@@ -81,7 +81,7 @@ const ProjectUsersCard = ({ projectId }) => {
                             >
                                 <div className="flex items-center gap-3">
                                     <Avatar>
-                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.username}`} />
+                                        <AvatarImage src={user.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}`} />
                                         <AvatarFallback>{user.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                     <div>

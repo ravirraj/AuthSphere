@@ -94,7 +94,7 @@ export const authorize = async (req, res) => {
     // Note: Project providers might be stored as "Google" while query is "google". Check case sensitivity.
     const projectProvidersLower = project.providers.map(p => p.toLowerCase());
     if (!projectProvidersLower.includes(provider.toLowerCase())) {
-        console.error("SDK Authorize: Provider not enabled", provider, "Enabled:", project.providers);
+      console.error("SDK Authorize: Provider not enabled", provider, "Enabled:", project.providers);
       return res.status(400).json({
         error: "invalid_request",
         error_description: `${provider} not enabled`,
@@ -135,8 +135,8 @@ export const handleSDKCallback = async (req, res, endUser, provider, manualSdkRe
     console.log("🔹 handleSDKCallback invoked with:", { sdk_request, endUserEmail: endUser?.email });
 
     if (!sdk_request) {
-        console.error("❌ No sdk_request in query or manual argument");
-        return null; 
+      console.error("❌ No sdk_request in query or manual argument");
+      return null;
     }
 
     const authRequest = authRequests.get(sdk_request);
@@ -196,9 +196,9 @@ export const token = async (req, res) => {
     const clientId = client_id || public_key;
 
     if (!code) {
-         return res.status(400).json({ 
-        error: "invalid_request", 
-        error_description: "Missing code" 
+      return res.status(400).json({
+        error: "invalid_request",
+        error_description: "Missing code"
       });
     }
 
@@ -217,21 +217,21 @@ export const token = async (req, res) => {
     const authData = authCodes.get(code);
 
     if (!authData) {
-      return res.status(400).json({ 
-        error: "invalid_grant", 
-        error_description: "Invalid or expired code" 
+      return res.status(400).json({
+        error: "invalid_grant",
+        error_description: "Invalid or expired code"
       });
     }
 
     // PKCE Verification
     if (authData.codeChallenge) {
       if (!code_verifier) {
-        return res.status(400).json({ 
-          error: "invalid_request", 
-          error_description: "Missing code_verifier" 
+        return res.status(400).json({
+          error: "invalid_request",
+          error_description: "Missing code_verifier"
         });
       }
-      
+
       const hash = crypto
         .createHash("sha256")
         .update(code_verifier)
@@ -241,9 +241,9 @@ export const token = async (req, res) => {
         .replace(/=/g, "");
 
       if (hash !== authData.codeChallenge) {
-        return res.status(400).json({ 
-          error: "invalid_grant", 
-          error_description: "Code verifier failed" 
+        return res.status(400).json({
+          error: "invalid_grant",
+          error_description: "Code verifier failed"
         });
       }
     }
@@ -252,45 +252,46 @@ export const token = async (req, res) => {
       return res.status(400).json({ error: "invalid_client" });
     }
 
-    authCodes.delete(code); 
+    authCodes.delete(code);
 
     const { endUser, projectId } = authData;
 
     const refreshToken = crypto.randomBytes(40).toString("hex");
-    
+
     await Session.create({
       token: refreshToken,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       endUserId: endUser._id,
+      projectId: projectId, // Fixed: Added required projectId
       userAgent: req.headers["user-agent"],
       ipAddress: req.ip,
       isValid: true,
     });
 
     const accessToken = jwt.sign(
-      { 
+      {
         sub: endUser._id,
         projectId: projectId,
         email: endUser.email,
-        username: endUser.username 
+        username: endUser.username
       },
-      conf.accessTokenSecret, 
+      conf.accessTokenSecret,
       { expiresIn: "1h" }
     );
 
     // Prepare response matching AuthResponse interface in SDK
     return res.json({
-        success: true,
-        accessToken,
-        refreshToken,
-        user: {
-            id: endUser._id,
-            email: endUser.email,
-            username: endUser.username,
-            picture: "", // Add if available
-            provider: "local" // or derivation
-        },
-        expiresAt: Date.now() + 3600 * 1000
+      success: true,
+      accessToken,
+      refreshToken,
+      user: {
+        id: endUser._id,
+        email: endUser.email,
+        username: endUser.username,
+        picture: endUser.picture || "",
+        provider: endUser.provider || "local"
+      },
+      expiresAt: Date.now() + 3600 * 1000
     });
 
   } catch (err) {
@@ -308,32 +309,32 @@ export const refresh = async (req, res) => {
     const { refreshToken, publicKey } = req.body;
 
     if (!refreshToken) {
-         return res.status(400).json({ error: "invalid_request", error_description: "Missing refresh token" });
+      return res.status(400).json({ error: "invalid_request", error_description: "Missing refresh token" });
     }
 
-    const session = await Session.findOne({ 
-      token: refreshToken, 
-      isValid: true 
+    const session = await Session.findOne({
+      token: refreshToken,
+      isValid: true
     }).populate("endUserId");
 
     if (!session) {
-      return res.status(400).json({ 
-        error: "invalid_grant", 
-        error_description: "Invalid refresh token" 
+      return res.status(400).json({
+        error: "invalid_grant",
+        error_description: "Invalid refresh token"
       });
     }
 
     if (new Date() > session.expiresAt) {
-      return res.status(400).json({ 
-        error: "invalid_grant", 
-        error_description: "Refresh token expired" 
+      return res.status(400).json({
+        error: "invalid_grant",
+        error_description: "Refresh token expired"
       });
     }
 
     const endUser = session.endUserId;
-    
+
     const accessToken = jwt.sign(
-      { 
+      {
         sub: endUser._id,
         projectId: endUser.projectId,
         email: endUser.email,
@@ -343,8 +344,8 @@ export const refresh = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-     // Return format matching AuthResponse (partial) or what refreshTokens expects.
-     // SDK refreshTokens function expects: { success: boolean, accessToken: string, refreshToken: string, expiresAt?: number }
+    // Return format matching AuthResponse (partial) or what refreshTokens expects.
+    // SDK refreshTokens function expects: { success: boolean, accessToken: string, refreshToken: string, expiresAt?: number }
     return res.json({
       success: true,
       accessToken,

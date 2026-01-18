@@ -1,16 +1,57 @@
-# React + Vite
+# 🌌 AuthSphere Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AuthSphere is a high-performance, premium authentication platform designed for developers. This repository contains the frontend dashboard and developer documentation hub.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **🚀 Developer Dashboard**: Manage projects, API keys, and social providers in one place.
+- **🛡️ Secure Auth Hub**: Built with PKCE, JWT, and modern security best practices.
+- **📖 Documentation Hub**: Interactive, sidebar-driven documentation for easy SDK integration.
+- **🎨 Premium UI**: Built with React, Tailwind CSS, and Radix UI for a world-class experience.
+- **📱 Fully Responsive**: Seamless experience across mobile, tablet, and desktop devices.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework**: [React 19](https://react.dev/)
+- **Bundler**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Components**: [Radix UI](https://www.radix-ui.com/) + [Shadcn UI](https://ui.shadcn.com/)
+- **Routing**: [React Router 7](https://reactrouter.com/)
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+2. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 📖 Documentation
+
+The full documentation for the AuthSphere SDK is available directly within the app at `/docs`. It covers:
+
+- SDK Initialization
+- Authentication Flow
+- Session Management
+- Protected Routes
+- API Reference
+
+---
+
+Built with ❤️ by the AuthSphere Team.

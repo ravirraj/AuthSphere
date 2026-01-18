@@ -46,6 +46,11 @@ const handleSocialAuth = async (res, req, userData, context = {}) => {
       provider: userData.provider,
       providerId: userData.providerId,
     });
+  } else {
+    // Update existing developer info
+    developer.picture = userData.picture || developer.picture;
+    developer.username = userData.username || developer.username;
+    await developer.save();
   }
 
   const accessToken = generateAccessToken(developer._id);
@@ -119,10 +124,16 @@ const handleSDKFlow = async (res, req, userData, explicitSdkRequestId) => {
         username,
         password: randomPassword,
         projectId: authRequest.projectId,
+        picture: userData.picture || "",
+        provider: userData.provider || "local",
+        providerId: userData.providerId || "",
       });
       console.log("✨ EndUser created:", endUser._id);
     } else {
-        console.log("✅ EndUser found:", endUser._id);
+      console.log("✅ EndUser found, updating profile info...");
+      endUser.picture = userData.picture || endUser.picture;
+      endUser.username = userData.username || endUser.username;
+      await endUser.save();
     }
 
     // ---------- CALL SDK CALLBACK ----------
@@ -137,13 +148,13 @@ const handleSDKFlow = async (res, req, userData, explicitSdkRequestId) => {
 };
 
 const getContextFromReq = (req) => {
-    if (req.query.sdk === 'true') {
-        return { type: 'sdk', sdk_request: req.query.sdk_request };
-    }
-    if (req.query.cli === 'true') {
-        return { type: 'cli' };
-    }
-    return { type: 'dev' };
+  if (req.query.sdk === 'true') {
+    return { type: 'sdk', sdk_request: req.query.sdk_request };
+  }
+  if (req.query.cli === 'true') {
+    return { type: 'cli' };
+  }
+  return { type: 'dev' };
 };
 
 /* ============================================================
@@ -172,7 +183,7 @@ export async function googleCallback(req, res) {
     let context = { cli: false, sdkRequest: null };
     if (state === 'cli') context.cli = true;
     if (state && state.startsWith('sdk:')) {
-        context.sdkRequest = state.split(':')[1];
+      context.sdkRequest = state.split(':')[1];
     }
     console.log("🧩 Parsed Parse Context:", context);
 
@@ -217,7 +228,7 @@ export async function githubCallback(req, res) {
     let context = { cli: false, sdkRequest: null };
     if (state === 'cli') context.cli = true;
     if (state && state.startsWith('sdk:')) {
-        context.sdkRequest = state.split(':')[1];
+      context.sdkRequest = state.split(':')[1];
     }
     console.log("🧩 Parsed GitHub Context:", context);
 
@@ -262,7 +273,7 @@ export async function discordCallback(req, res) {
     let context = { cli: false, sdkRequest: null };
     if (state === 'cli') context.cli = true;
     if (state && state.startsWith('sdk:')) {
-        context.sdkRequest = state.split(':')[1];
+      context.sdkRequest = state.split(':')[1];
     }
     console.log("🧩 Parsed Discord Context:", context);
 

@@ -3,6 +3,8 @@ import { Router } from "express";
 // Route modules
 import developerRoutes from "./developer.routes.js";
 import projectRoutes from "./project.routes.js";
+import analyticsRoutes from "./analytics.routes.js";
+import sessionRoutes from "./session.routes.js";
 import authRoutes from "./auth.routes.js";
 import sdkRoutes from "./sdk.routes.js";
 
@@ -16,6 +18,8 @@ const API_PREFIX = "/api/v1";
 // ================================
 router.use(`${API_PREFIX}/developers`, developerRoutes);
 router.use(`${API_PREFIX}/projects`, projectRoutes);
+router.use(`${API_PREFIX}/analytics`, analyticsRoutes);
+router.use(`${API_PREFIX}/sessions`, sessionRoutes);
 
 // ================================
 // Auth routes (OAuth providers)

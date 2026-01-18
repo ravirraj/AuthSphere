@@ -9,6 +9,8 @@ import Documentation from "@/pages/Documentation";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import ProjectDetailPage from "@/pages/ProjectDetailPage";
+import ProjectAnalytics from "@/pages/ProjectAnalytics";
+import SessionManagement from "@/pages/SessionManagement";
 
 export const routes = [
   {
@@ -59,6 +61,26 @@ export const routes = [
       <ProtectedRoute>
         <MainLayout>
           <ProjectDetailPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/projects/:projectId/analytics",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <ProjectAnalytics />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings/sessions",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <SessionManagement />
         </MainLayout>
       </ProtectedRoute>
     ),

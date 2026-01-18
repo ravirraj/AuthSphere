@@ -31,6 +31,9 @@ const endUserSchema = new mongoose.Schema(
       ref: "Project",
       required: true,
     },
+    picture: { type: String, default: "" },
+    provider: { type: String, default: "local" },
+    providerId: { type: String },
   },
   { timestamps: true }
 );
@@ -43,6 +46,8 @@ endUserSchema.pre("save", async function () {
 
 endUserSchema.index({ projectId: 1, email: 1 }, { unique: true });
 endUserSchema.index({ projectId: 1, username: 1 }, { unique: true });
+endUserSchema.index({ projectId: 1, createdAt: -1 });
+endUserSchema.index({ projectId: 1, provider: 1 });
 
 const EndUser = mongoose.model("EndUser", endUserSchema);
 export default EndUser;

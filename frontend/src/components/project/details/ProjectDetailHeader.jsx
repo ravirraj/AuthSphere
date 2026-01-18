@@ -4,6 +4,9 @@ import {
   Folder,
   Calendar,
   Hash,
+  Activity,
+  BarChart3,
+  ArrowUpRight
 } from "lucide-react";
 
 import {
@@ -35,16 +38,26 @@ const ProjectDetailHeader = ({ project }) => {
         </Button>
 
         {/* Title */}
-        <div className="flex items-center gap-3">
-          <Folder className="h-6 w-6 text-primary" />
-          <div>
-            <CardTitle className="text-2xl">
-              {project.name}
-            </CardTitle>
-            <CardDescription>
-              Project overview & configuration
-            </CardDescription>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Folder className="h-6 w-6 text-primary" />
+            <div>
+              <CardTitle className="text-2xl">
+                {project.name}
+              </CardTitle>
+              <CardDescription>
+                Project overview & configuration
+              </CardDescription>
+            </div>
           </div>
+          <Button
+            onClick={() => navigate(`/projects/${project._id}/analytics`)}
+            className="hidden sm:flex bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 border-none transition-all hover:scale-105"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            View Analytics
+            <ArrowUpRight className="h-3 w-3 ml-1 opacity-50" />
+          </Button>
         </div>
 
       </CardHeader>
