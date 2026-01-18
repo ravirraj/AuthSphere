@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "diagnose": "node scripts/diagnose.js",
+    "test:env": "node -e \"console.log('Environment check passed')\" && node scripts/diagnose.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "chalk": "^5.6.2",
@@ -21,7 +24,10 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.1",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "node-fetch": "^3.3.2",
+    "qs": "^6.14.1",
+    "ua-parser-js": "^2.0.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

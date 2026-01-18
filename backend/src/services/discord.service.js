@@ -1,13 +1,20 @@
 import axios from "axios";
 import { conf } from "../configs/env.js";
 
-export function getDiscordAuthURL() {
+export function getDiscordAuthURL(context = { type: "dev" }) {
+  let state = "dev";
+  if (context.type === "sdk" && context.sdk_request) {
+    state = `sdk:${context.sdk_request}`;
+  }
+  if (context.type === "cli") state = "cli";
+
   const params = new URLSearchParams({
     client_id: conf.DISCORD_CLIENT_ID,
     redirect_uri: conf.DISCORD_REDIRECT_URI,
     response_type: "code",
     scope: "identify email",
     prompt: "consent",
+    state,
   });
   return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
 }

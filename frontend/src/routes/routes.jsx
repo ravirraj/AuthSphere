@@ -1,28 +1,99 @@
-import { Navigate } from 'react-router-dom';
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Home from '@/pages/Home'; // We'll create this next
-import ProtectedRoute from './ProtectedRoute';
+import { Navigate } from "react-router-dom";
+
+import Home from "@/pages/Home";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register"; // ADD THIS
+import Dashboard from "@/pages/Dashboard";
+import Documentation from "@/pages/Documentation";
+
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "@/components/layout/MainLayout";
+import ProjectDetailPage from "@/pages/ProjectDetailPage";
+import ProjectAnalytics from "@/pages/ProjectAnalytics";
+import SessionManagement from "@/pages/SessionManagement";
 
 export const routes = [
   {
     path: "/",
-    element: <Home />,
+    element: (
+      <MainLayout>
+        <Home />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/docs",
+    element: (
+      <MainLayout>
+        <Documentation />
+      </MainLayout>
+    ),
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <MainLayout>
+        <Login />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/register", // ADD THIS ROUTE
+    element: (
+      <MainLayout>
+        <Register />
+      </MainLayout>
+    ),
   },
   {
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <Dashboard />
+        <MainLayout>
+          <Dashboard />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/projects/:projectId",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <ProjectDetailPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/projects/:projectId/analytics",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <ProjectAnalytics />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings/sessions",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <SessionManagement />
+        </MainLayout>
       </ProtectedRoute>
     ),
   },
   {
     path: "*",
-    element: <div className="flex h-screen items-center justify-center">404 - Page Not Found</div>,
+    element: (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold">404</h1>
+          <p className="text-muted-foreground">Page Not Found</p>
+        </div>
+      </div>
+    ),
   },
 ];

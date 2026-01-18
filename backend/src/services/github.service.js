@@ -4,12 +4,23 @@ import { conf } from "../configs/env.js";
 /**
  * Returns GitHub OAuth authorization URL
  */
-export function getGithubAuthURL() {
+/**
+ * Returns GitHub OAuth authorization URL
+ * @param {object} context
+ */
+export function getGithubAuthURL(context = { type: "dev" }) {
+  let state = "dev";
+  if (context.type === "sdk" && context.sdk_request) {
+    state = `sdk:${context.sdk_request}`;
+  }
+  if (context.type === "cli") state = "cli";
+
   const params = new URLSearchParams({
     client_id: conf.GITHUB_CLIENT_ID,
     redirect_uri: conf.GITHUB_REDIRECT_URI,
-    scope: "read:user user:email", // get profile + email
+    scope: "read:user user:email",
     allow_signup: "true",
+    state,
   });
 
   return `https://github.com/login/oauth/authorize?${params.toString()}`;

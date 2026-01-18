@@ -40,10 +40,22 @@ api.interceptors.response.use(
       try {
         await api.post("/developers/refresh-token");
 
+        // ✅ DISPATCH EVENT TO UPDATE AUTH CONTEXT
+        window.dispatchEvent(new Event("token-refreshed"));
+
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+        
+        // ✅ CLEAR SESSION AND REDIRECT TO LOGIN
+        window.dispatchEvent(new Event("auth-failed"));
+        
+        // Prevent infinite reload loop if already on login page
+        if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+        }
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
