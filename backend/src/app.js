@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { httpLogger } from "./utils/logger.js";
 import { conf } from "./configs/env.js";
 import routes from "./routes/index.js"; // centralized routes
+import homeHandler from "./home.js";
 
 const app = express();
 
@@ -39,7 +40,9 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// --- Health Check ---
+// --- Home & Health Check ---
+app.get("/", homeHandler);
+
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
