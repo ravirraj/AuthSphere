@@ -232,7 +232,13 @@ export const { User, Auth } = auth;`}</code>
               <img
                 src="/assets/logo-full.png"
                 alt="AuthSphere Logo"
-                className="h-16 object-contain mix-blend-multiply dark:mix-blend-normal dark:brightness-125 transition-all duration-300"
+                className="h-16 w-auto object-contain 
+             /* Light Mode: Cleans up white backgrounds */
+             mix-blend-multiply 
+             /* Dark Mode: Flips colors if it's a black icon, or boosts visibility */
+             dark:mix-blend-normal dark:invert dark:brightness-150
+             /* Smooth transition for theme switching */
+             transition-all duration-300"
               />
             </div>
             <p className="text-muted-foreground font-medium max-w-sm leading-relaxed">
