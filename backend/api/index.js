@@ -6,7 +6,11 @@ export default async (req, res) => {
         await connectDB();
         return app(req, res);
     } catch (error) {
-        console.error("Vercel Serverless Function Error:", error);
-        res.status(500).json({ error: "Internal Server Error during DB connection" });
+        console.error("Critical: Vercel Serverless Function Crash:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error during function initialization",
+            error: error.message
+        });
     }
 };

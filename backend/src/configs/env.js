@@ -12,7 +12,7 @@ const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
 
 if (missingVars.length > 0) {
   console.error(`❌ Missing required environment variables: ${missingVars.join(", ")}`);
-  process.exit(1);
+  // Do not call process.exit(1) in serverless; let the application handle missing vars or throw an error later.
 }
 
 const _conf = {
