@@ -33,7 +33,7 @@ const Login = () => {
   }, [user, navigate]);
 
   const handleSocialLogin = (provider) => {
-    window.location.href = `http://localhost:8000/auth/${provider}`;
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/${provider}`;
   };
 
   const handleLocalLogin = async (e) => {
@@ -78,9 +78,9 @@ const Login = () => {
 
         <Card className="border-border shadow-2xl bg-card/50 backdrop-blur-xl">
           <CardHeader className="space-y-2 text-center pb-8">
-            <div className="flex justify-center mb-4">
-              <div className="bg-blue-600 p-2 rounded-2xl shadow-lg shadow-blue-500/20">
-                <Sparkles className="text-white h-6 w-6" />
+            <div className="flex justify-center mb-6">
+              <div className="bg-white border border-border/50 p-3 rounded-2xl shadow-sm">
+                <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-14 w-14 object-contain mix-blend-multiply" />
               </div>
             </div>
             <CardTitle className="text-3xl font-black tracking-tight text-foreground italic">Welcome back.</CardTitle>
@@ -194,8 +194,8 @@ const Login = () => {
         <p className="text-center text-[10px] text-muted-foreground font-mono uppercase tracking-[0.2em]">
           SECURED BY AUTH-SPHERE CRYPTO-CORE V2
         </p>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

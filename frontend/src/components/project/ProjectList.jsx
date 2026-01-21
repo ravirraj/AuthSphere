@@ -56,8 +56,8 @@ const ProjectList = () => {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
-            <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-500/20">
-              <FolderKanban className="h-5 w-5 text-white" />
+            <div className="bg-white border border-border/40 p-1.5 rounded-xl shadow-sm">
+              <img src="/assets/logo.png" alt="Logo" className="h-5 w-5 object-contain mix-blend-multiply" />
             </div>
             Active Workspaces
           </h2>

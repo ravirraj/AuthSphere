@@ -63,8 +63,8 @@ const CreateProjectModal = ({ open, onClose, onCreated }) => {
 
         <DialogHeader className="p-8 pb-4 text-left">
           <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 rounded-2xl bg-blue-600/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
-              <FolderPlus size={24} />
+            <div className="h-14 w-14 rounded-2xl bg-white border border-border/40 flex items-center justify-center shadow-xl shadow-blue-500/5 transition-transform hover:scale-105 duration-300">
+              <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-8 w-8 object-contain mix-blend-multiply" />
             </div>
             <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
               <X size={20} className="text-muted-foreground" />

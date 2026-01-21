@@ -109,11 +109,18 @@ const ProjectAnalytics = () => {
         <div className="max-w-7xl mx-auto py-8 px-4 space-y-10 animate-in fade-in duration-700">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-2">
-                    <Link to="/dashboard" className="group flex items-center text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        <ChevronLeftIcon className="h-4 w-4 mr-1 transition-transform group-hover:-translate-x-1" /> Back to Dashboard
-                    </Link>
-                    <h1 className="text-4xl font-black text-foreground tracking-tight">Project Analytics</h1>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Link to="/dashboard" className="group flex items-center text-xs font-bold text-muted-foreground uppercase tracking-widest hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                            <ChevronLeftIcon className="h-4 w-4 mr-1 transition-transform group-hover:-translate-x-1" /> Back
+                        </Link>
+                        <div className="h-1 w-1 rounded-full bg-border" />
+                        <div className="flex items-center gap-2 bg-white border border-border/50 px-2 py-1 rounded-lg shadow-sm">
+                            <img src="/assets/logo.png" alt="Logo" className="h-3.5 w-3.5 object-contain mix-blend-multiply" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">AuthSphere Insights</span>
+                        </div>
+                    </div>
+                    <h1 className="text-4xl font-black text-foreground tracking-tight italic">Project Analytics</h1>
                     <p className="text-muted-foreground font-medium">Monitoring real-time user acquisition and authentication health.</p>
                 </div>
                 <div className="flex items-center gap-3">
