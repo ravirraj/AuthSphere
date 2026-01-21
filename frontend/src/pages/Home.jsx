@@ -58,12 +58,39 @@ const Home = () => {
 
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] brightness-100 contrast-150 pointer-events-none dark:invert"></div>
 
-        <div className="container mx-auto px-6 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-blue-500/5 dark:bg-blue-500/10 border border-blue-500/10 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Trusted by 2,000+ developers globally</span>
-            <Separator orientation="vertical" className="h-3 bg-blue-500/20" />
-            <ArrowRight className="h-3 w-3 text-blue-400" />
+        <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
+          <div className="flex flex-col items-center gap-6 group">
+            {/* MAIN LOGO */}
+            <img
+              src="/assets/logo-full.png"
+              alt="AuthSphere Logo"
+              className="h-64 w-64 object-contain transition-all duration-700 group-hover:scale-105
+               /* Light Theme */
+               mix-blend-multiply
+               /* Dark Theme */
+               dark:mix-blend-normal dark:invert dark:brightness-150 dark:contrast-125
+               /* Effects */
+               filter dark:drop-shadow-[0_0_40px_rgba(59,130,246,0.3)]"
+            />
+
+            {/* TRUST BADGE */}
+            <div className="inline-flex items-center gap-2 mb-10 px-4 py-2 rounded-full 
+                  bg-blue-500/5 dark:bg-blue-400/10 
+                  border border-blue-500/10 dark:border-blue-400/20 
+                  backdrop-blur-xl hover:bg-blue-500/10 dark:hover:bg-blue-400/20 
+                  transition-all duration-300 group/badge 
+                  animate-in fade-in slide-in-from-bottom-2">
+
+              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 group-hover/badge:scale-125 transition-transform duration-300" />
+
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300">
+                Trusted by 2,000+ developers globally
+              </span>
+
+              <div className="h-3 w-[1px] bg-blue-500/20 dark:bg-blue-400/30" /> {/* Simple Separator fallback */}
+
+              <ChevronRight className="h-3 w-3 text-blue-500 dark:text-blue-400 group-hover/badge:translate-x-0.5 transition-transform" />
+            </div>
           </div>
 
           <h1 className="text-7xl lg:text-[120px] font-black tracking-tighter mb-10 leading-[0.85] text-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 italic">
@@ -201,9 +228,12 @@ export const { User, Auth } = auth;`}</code>
       <footer className="bg-background border-t border-border py-20 px-6">
         <div className="container mx-auto grid md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-500/20"><Command size={24} /></div>
-              <span className="text-2xl font-black uppercase tracking-tighter text-foreground italic">AuthSphere.</span>
+            <div className="flex items-center">
+              <img
+                src="/assets/logo-full.png"
+                alt="AuthSphere Logo"
+                className="h-16 object-contain mix-blend-multiply dark:mix-blend-normal dark:brightness-125 transition-all duration-300"
+              />
             </div>
             <p className="text-muted-foreground font-medium max-w-sm leading-relaxed">
               The identity infrastructure for the modern web. Built by developers, for developers.

@@ -67,8 +67,8 @@ const Docs = () => {
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
         <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-            <div className="bg-indigo-600 p-1.5 rounded-lg shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20">
-              <Sparkles className="text-white" size={18} />
+            <div className="bg-white border border-border p-1 rounded-lg shadow-sm">
+              <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-6 w-6 object-contain mix-blend-multiply" />
             </div>
             <span className="font-bold tracking-tight text-foreground">AuthSphere</span>
             <Badge variant="outline" className="hidden sm:inline-flex ml-2 font-mono text-[10px] text-muted-foreground border-border uppercase">v2.4.0-stable</Badge>

@@ -90,8 +90,10 @@ const Dashboard = () => {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold text-sm uppercase tracking-wider">
-              <Zap size={14} fill="currentColor" />
+            <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 font-bold text-sm uppercase tracking-wider">
+              <div className="bg-white border border-border/40 p-1 rounded-lg shadow-sm">
+                <img src="/assets/logo.png" alt="Logo" className="h-4 w-4 object-contain mix-blend-multiply" />
+              </div>
               Live System Status
             </div>
             <h1 className="text-4xl font-black tracking-tight text-foreground">

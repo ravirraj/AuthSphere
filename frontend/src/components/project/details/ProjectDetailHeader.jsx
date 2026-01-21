@@ -51,8 +51,8 @@ const ProjectDetailHeader = ({ project }) => {
       {/* 2. Main Title Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="flex items-start gap-4">
-          <div className="mt-1 bg-blue-600 p-3 rounded-2xl shadow-xl shadow-blue-500/10 transition-transform hover:scale-105 active:scale-95 duration-300">
-            <Folder className="h-6 w-6 text-white" fill="currentColor" />
+          <div className="mt-1 bg-white border border-border/40 p-2.5 rounded-2xl shadow-xl shadow-blue-500/5 transition-transform hover:scale-105 active:scale-95 duration-300">
+            <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-7 w-7 object-contain mix-blend-multiply" />
           </div>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import os from "os";
+import { conf } from "./configs/env.js";
 
 const homeHandler = (req, res) => {
     const memory = process.memoryUsage();
@@ -30,7 +31,8 @@ const homeHandler = (req, res) => {
         resources: {
             documentation: "https://authsphere.vercel.app/docs",
             repository: "https://github.com/madhav9757/AuthSphere",
-            status_page: "https://status.authsphere.io"
+            status_page: "https://status.authsphere.io",
+            frontend: conf.frontendUrl
         }
     };
 
@@ -63,14 +65,20 @@ const generateTerminalUI = (d) => `
 </head>
 <body class="bg-[#F8F8F8] text-black min-h-screen flex flex-col selection:bg-black selection:text-white">
     <!-- TOP BAR -->
-    <header class="border-b-4 border-black p-6 flex justify-between items-center bg-white sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-black flex items-center justify-center">
-                <div class="w-4 h-4 bg-white rotate-45"></div>
+    <header class="border-b-4 border-black p-6 flex justify-between items-center bg-white/90 backdrop-blur-xl sticky top-0 z-50">
+        <div class="flex items-center gap-6">
+            <div class="w-16 h-16 border-2 border-black rounded-2xl flex items-center justify-center bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden p-2 transition-transform hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                <img src="${d.resources.frontend}/assets/logo.png" alt="AuthSphere Logo" class="w-full h-full object-contain mix-blend-multiply" style="filter: contrast(1.1) brightness(1.1);" onerror="this.src='https://authsphere.vercel.app/assets/logo.png'">
             </div>
             <div>
-                <h1 class="font-800 text-2xl tracking-tighter leading-none">${d.service}</h1>
-                <span class="text-[9px] font-bold tracking-[0.3em] text-gray-400">IDENTITY_INFRASTRUCTURE_CORE</span>
+                <h1 class="font-900 text-3xl tracking-tighter leading-none flex items-center gap-3">
+                    ${d.service}
+                    <span class="text-[10px] bg-black text-white px-2 py-1 rounded-sm tracking-[0.2em] translate-y-[-2px] font-black uppercase">STABLE_CORE</span>
+                </h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="text-[9px] font-bold tracking-[0.3em] text-gray-400">IDENTITY_INFRASTRUCTURE // GLOBAL_SHARD_v2.4.0</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
             </div>
         </div>
         <div class="text-right hidden sm:block">
