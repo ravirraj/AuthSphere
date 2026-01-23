@@ -42,12 +42,11 @@ export const verifyJWT = async (req, res, next) => {
                     return res.status(401).json({ message: "Invalid refresh token" });
                 }
 
-                // Generate new tokens
+                // Generate new access token ONLY (Stop rotating refresh token to avoid race conditions)
                 const newAccessToken = generateAccessToken(developer._id);
-                const newRefreshToken = generateRefreshToken(developer._id);
 
-                developer.refreshToken = newRefreshToken;
-                await developer.save({ validateBeforeSave: false });
+                // We do NOT save new refresh token to DB, reducing race conditions on parallel requests.
+                // The existing refresh token remains valid until its original expiry (approx 7-10 days).
 
                 const cookieOptions = {
                     httpOnly: true,
@@ -57,7 +56,7 @@ export const verifyJWT = async (req, res, next) => {
                 };
 
                 res.cookie("accessToken", newAccessToken, cookieOptions);
-                res.cookie("refreshToken", newRefreshToken, cookieOptions);
+                // do NOT resend refresh token cookie, let the old one persist
 
                 req.developer = developer;
                 return next();
