@@ -104,7 +104,7 @@ const Register = () => {
           <CardHeader className="space-y-2 text-center pb-8">
             <div className="flex justify-center mb-6">
               <div className="bg-white border border-border/50 p-3 rounded-2xl shadow-sm">
-                <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-14 w-14 object-contain mix-blend-multiply" />
+                <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-14 w-14 object-contain mix-blend-multiply dark:invert dark:mix-blend-normal" />
               </div>
             </div>
             <CardTitle className="text-3xl font-black tracking-tight text-foreground italic">Start building.</CardTitle>

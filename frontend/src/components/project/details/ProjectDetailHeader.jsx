@@ -32,101 +32,112 @@ const ProjectDetailHeader = ({ project }) => {
   };
 
   return (
-    <div className="relative pb-10 border-b border-border/60 mb-10">
+    <div className="relative pb-12 border-b border-border mb-12 animate-in fade-in slide-in-from-top-4 duration-1000">
       {/* 1. Breadcrumb / Back Navigation */}
-      <nav className="flex items-center gap-2 mb-8 animate-in slide-in-from-left-2 duration-500">
+      <nav className="flex items-center gap-3 mb-10">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate("/dashboard")}
-          className="h-8 rounded-full text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/5 transition-all font-bold text-xs uppercase tracking-widest"
+          className="h-9 rounded-xl text-muted-foreground hover:text-blue-600 hover:bg-blue-600/5 transition-all font-black text-[10px] uppercase tracking-[0.2em] px-4 border border-transparent hover:border-blue-600/20"
         >
           <ArrowLeft className="h-3.5 w-3.5 mr-2" />
-          Workspace
+          Grid Control
         </Button>
         <span className="text-border">/</span>
-        <span className="text-xs font-black text-foreground uppercase tracking-widest opacity-80">{project.name}</span>
+        <Badge variant="outline" className="text-[10px] font-black text-foreground uppercase tracking-widest bg-muted/30 border-border px-4 py-1.5 rounded-xl">
+          Shard: {project.name}
+        </Badge>
       </nav>
 
       {/* 2. Main Title Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+        <div className="flex items-start gap-6">
           <div className="mt-1 bg-white border border-border/40 p-2.5 rounded-2xl shadow-xl shadow-blue-500/5 transition-transform hover:scale-105 active:scale-95 duration-300">
-            <img src="/assets/logo.png" alt="AuthSphere Logo" className="h-7 w-7 object-contain mix-blend-multiply" />
+            <img
+              src="/assets/logo.png"
+              alt="AuthSphere Logo"
+              className="h-7 w-7 object-contain mix-blend-multiply dark:invert dark:mix-blend-normal"
+            />
           </div>
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-4xl font-black tracking-tight text-foreground italic">
-                {project.name}
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <h1 className="text-5xl lg:text-6xl font-black tracking-tighter text-foreground italic uppercase leading-none">
+                {project.name}<span className="text-blue-600">.</span>
               </h1>
-              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-black px-3 py-1 text-[10px] uppercase tracking-tighter">
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse mr-2" />
-                Live Node
-              </Badge>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Shard Active</span>
+              </div>
             </div>
-            <p className="text-muted-foreground font-medium text-lg leading-relaxed max-w-xl">
-              Project ID <span className="text-foreground font-bold">{project._id}</span> is fully provisioned and accepting authentication requests.
+            <p className="text-muted-foreground font-medium text-lg leading-relaxed max-w-2xl text-balance">
+              Managing secure identity for <span className="text-foreground font-black italic">{project.name}</span>.
+              Currently connected to the <span className="text-blue-600 font-bold">Global Shard Registry</span> with sub-50ms latency.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <Button
             variant="outline"
-            onClick={() => navigate(`/projects/${projectId}/analytics`)}
-            className="rounded-full font-bold border-border shadow-sm hover:bg-muted/50 px-6 transition-all"
+            onClick={() => navigate(`/projects/${project._id}/analytics`)}
+            className="rounded-2xl h-14 font-black uppercase tracking-widest text-xs border-border bg-card/50 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all px-8 border-b-4 border-b-muted-foreground/20 active:border-b-0 active:translate-y-1"
           >
-            <BarChart3 className="h-4 w-4 mr-2 text-muted-foreground" />
-            Vitals
-            <ArrowUpRight className="h-3 w-3 ml-2 opacity-40" />
+            <BarChart3 className="h-4 w-4 mr-3 text-blue-600" />
+            Shard Vitals
           </Button>
 
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow-lg shadow-blue-500/20 transition-all active:scale-95 px-8 py-6 h-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-black h-14 rounded-2xl shadow-xl shadow-blue-600/20 transition-all active:scale-95 px-10 uppercase tracking-widest text-xs border-b-4 border-b-blue-800 active:border-b-0 active:translate-y-1"
           >
-            Update Infrastructure
+            Deploy Shard Updates <ArrowUpRight className="h-4 w-4 ml-3 opacity-60" />
           </Button>
         </div>
       </div>
 
       {/* 3. Meta Data Strip */}
-      <div className="flex flex-wrap items-center gap-8 mt-10">
+      <div className="flex flex-wrap items-center gap-8 mt-12 bg-muted/20 p-6 rounded-[2rem] border border-border/50">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div
                 onClick={copyId}
-                className="group flex items-center gap-3 px-4 py-2 bg-muted/40 hover:bg-muted/70 rounded-xl cursor-pointer transition-all border border-border/40 hover:border-border active:scale-95"
+                className="group flex items-center gap-4 px-5 py-3 bg-background hover:bg-muted/50 rounded-2xl cursor-pointer transition-all border border-border active:scale-95 shadow-sm"
               >
-                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[10px] font-mono font-bold text-foreground uppercase tracking-tight">Shard ID: {project._id}</span>
-                {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-30 group-hover:opacity-100" />}
+                <Hash className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-mono font-bold text-foreground">shard_{project._id}</span>
+                {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-muted-foreground opacity-30 group-hover:opacity-100" />}
               </div>
             </TooltipTrigger>
-            <TooltipContent className="bg-foreground text-background font-bold text-[10px] rounded-lg">Click to copy Shard ID</TooltipContent>
+            <TooltipContent className="bg-foreground text-background font-black text-[10px] rounded-xl px-4 py-2">CLICK TO SYNC SHARD ID</TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <Calendar className="h-3.5 w-3.5" />
+        <div className="h-10 w-[1px] bg-border/50 hidden md:block" />
+
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center border border-border">
+            <Calendar className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Provisioned</span>
-            <span className="text-[11px] font-bold text-foreground">
-              {new Date(project.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Sequence Provisioned</span>
+            <span className="text-xs font-bold text-foreground">
+              {new Date(project.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-            <Activity className="h-3.5 w-3.5 text-blue-500" />
+        <div className="h-10 w-[1px] bg-border/50 hidden md:block" />
+
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-blue-600/10 flex items-center justify-center border border-blue-600/20">
+            <Activity className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Engine Version</span>
-            <span className="text-[11px] font-bold text-foreground">
-              AuthSphere v1.0.4 SDK
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Registry Version</span>
+            <span className="text-xs font-bold text-foreground flex items-center gap-2">
+              Grid-Core 2.1.0-stable
+              <Badge className="bg-blue-600 text-white border-none py-0 px-2 h-4 text-[8px] font-black">LATEST</Badge>
             </span>
           </div>
         </div>
