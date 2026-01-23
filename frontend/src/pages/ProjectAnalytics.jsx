@@ -56,8 +56,8 @@ const StatsCard = ({ title, value, trend, icon: Icon, description }) => (
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-900 border border-slate-800 text-white p-3 rounded-xl shadow-2xl">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 tracking-widest">
+            <div className="bg-card border border-border text-foreground p-3 rounded-xl shadow-2xl">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1 tracking-widest">
                     {label ? format(new Date(label), "MMMM dd, yyyy") : ""}
                 </p>
                 <p className="text-sm font-bold">
@@ -106,7 +106,7 @@ const ProjectAnalytics = () => {
         : [];
 
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4 space-y-10 animate-in fade-in duration-700">
+        <div className="min-h-screen bg-background max-w-7xl mx-auto py-8 px-4 space-y-10 animate-in fade-in duration-700">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-4">
@@ -287,24 +287,24 @@ const ProjectAnalytics = () => {
                 </Card>
 
                 {/* Infrastructure Performance */}
-                <Card className="border-none shadow-sm bg-slate-900 dark:bg-black text-white overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <CardHeader className="relative z-10 border-b border-white/5">
-                        <CardTitle className="text-white flex items-center gap-2 text-lg">
-                            <ZapIcon className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                <Card className="border-border shadow-sm bg-card overflow-hidden relative group">
+                    <div className="absolute inset-0 bg-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CardHeader className="relative z-10 border-b border-border bg-muted/20">
+                        <CardTitle className="text-foreground flex items-center gap-2 text-lg italic">
+                            <ZapIcon className="h-5 w-5 text-amber-500 fill-amber-500" />
                             Infrastructure Health
                         </CardTitle>
-                        <CardDescription className="text-slate-400">Project-wide performance monitoring</CardDescription>
+                        <CardDescription>Project-wide performance monitoring</CardDescription>
                     </CardHeader>
                     <CardContent className="relative z-10 space-y-8 py-8">
                         <div className="grid grid-cols-2 gap-8">
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Service Uptime</p>
-                                <p className="text-3xl font-black text-emerald-400">99.99%</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Service Uptime</p>
+                                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">99.99%</p>
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">OAuth Latency</p>
-                                <p className="text-3xl font-black text-blue-400">{data.overview?.health?.latency || "102ms"}</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">OAuth Latency</p>
+                                <p className="text-3xl font-black text-blue-600 dark:text-blue-400">{data.overview?.health?.latency || "102ms"}</p>
                             </div>
                         </div>
 
@@ -312,28 +312,28 @@ const ProjectAnalytics = () => {
                             <div className="flex items-center justify-between group/row">
                                 <div className="flex items-center gap-3">
                                     <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                    <span className="font-bold text-slate-300">Identity API</span>
+                                    <span className="font-bold text-foreground">Identity API</span>
                                 </div>
                                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold text-[10px] px-2 py-0.5">OPERATIONAL</Badge>
                             </div>
                             <div className="flex items-center justify-between group/row">
                                 <div className="flex items-center gap-3">
                                     <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                    <span className="font-bold text-slate-300">Token Exchange Service</span>
+                                    <span className="font-bold text-foreground">Token Exchange Service</span>
                                 </div>
                                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold text-[10px] px-2 py-0.5">OPERATIONAL</Badge>
                             </div>
                             <div className="flex items-center justify-between group/row">
                                 <div className="flex items-center gap-3">
                                     <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                                    <span className="font-bold text-slate-300">Global Session Edge</span>
+                                    <span className="font-bold text-foreground">Global Session Edge</span>
                                 </div>
                                 <Badge className="bg-emerald-500/10 text-emerald-500 border-none font-bold text-[10px] px-2 py-0.5">OPERATIONAL</Badge>
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-white/5">
-                            <p className="text-[10px] text-slate-500 font-mono italic">
+                        <div className="pt-4 border-t border-border">
+                            <p className="text-[10px] text-muted-foreground font-mono italic">
                                 * System health reflects global AuthSphere status and dedicated project shards.
                             </p>
                         </div>

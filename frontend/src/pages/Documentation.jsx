@@ -43,7 +43,7 @@ const Docs = () => {
 
   const CodeBlock = ({ code, id, language = "bash" }) => (
     <div className="relative group my-6">
-      <div className="absolute left-6 -top-3 px-2 py-1 bg-slate-900 rounded text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-800">
+      <div className="absolute left-6 -top-3 px-2 py-1 bg-card rounded text-[10px] font-mono text-muted-foreground uppercase tracking-widest border border-border">
         {language}
       </div>
       <div className="absolute right-4 top-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -54,8 +54,8 @@ const Docs = () => {
           {copied === id ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Copy size={14} />}
         </button>
       </div>
-      <pre className="bg-slate-950 rounded-2xl p-8 pt-10 overflow-x-auto border border-slate-800 shadow-2xl">
-        <code className="text-sm font-mono text-indigo-300/90 leading-relaxed">{code}</code>
+      <pre className="bg-muted/50 rounded-2xl p-8 pt-10 overflow-x-auto border border-border shadow-2xl">
+        <code className="text-sm font-mono text-foreground/80 leading-relaxed">{code}</code>
       </pre>
     </div>
   );
@@ -125,7 +125,7 @@ const Docs = () => {
             ))}
           </div>
 
-          <div className="mt-12 p-6 bg-slate-950 rounded-3xl text-white relative overflow-hidden shadow-2xl shadow-indigo-500/10 border border-white/5">
+          <div className="mt-12 p-6 bg-card rounded-3xl text-card-foreground relative overflow-hidden shadow-2xl shadow-indigo-500/10 border border-border">
             <Lock size={80} className="absolute -right-4 -bottom-4 text-white/5 rotate-12" />
             <div className="relative z-10">
               <p className="text-xs font-medium text-indigo-400 mb-1">Production Ready?</p>

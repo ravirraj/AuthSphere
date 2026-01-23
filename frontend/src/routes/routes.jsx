@@ -11,6 +11,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import ProjectDetailPage from "@/pages/ProjectDetailPage";
 import ProjectAnalytics from "@/pages/ProjectAnalytics";
 import SessionManagement from "@/pages/SessionManagement";
+import Pricing from "@/pages/Pricing";
 
 export const routes = [
   {
@@ -18,6 +19,14 @@ export const routes = [
     element: (
       <MainLayout>
         <Home />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/pricing",
+    element: (
+      <MainLayout>
+        <Pricing />
       </MainLayout>
     ),
   },

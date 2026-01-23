@@ -153,7 +153,7 @@ const ProjectKeysCard = ({ project, onKeysRotated }) => {
             <Badge variant="outline" className="text-[10px] font-mono opacity-50 uppercase border-border">esm / react</Badge>
           </div>
           <div className="relative group overflow-hidden rounded-2xl shadow-2xl">
-            <pre className="bg-slate-950 text-slate-300 p-6 rounded-2xl text-[13px] font-mono leading-relaxed overflow-x-auto border border-white/5 ring-1 ring-white/10">
+            <pre className="bg-muted/50 text-foreground/80 p-6 rounded-2xl text-[13px] font-mono leading-relaxed overflow-x-auto border border-border ring-1 ring-border/50">
               <code className="text-indigo-400">import</code> {`{ initAuth } `} <code className="text-indigo-400">from</code> <code className="text-emerald-400">"@authsphere/sdk"</code>;{"\n\n"}
               <code className="text-slate-500">// Initialize with your Identification Key</code>{"\n"}
               <code className="text-indigo-400">const</code> auth = <code className="text-amber-400">initAuth</code>({"{"}{"\n"}

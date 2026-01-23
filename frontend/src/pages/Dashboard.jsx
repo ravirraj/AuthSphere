@@ -84,7 +84,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background/50 dark:bg-slate-900/50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-[1400px] mx-auto px-6 py-10 space-y-10 animate-in fade-in duration-700">
 
         {/* HEADER */}
@@ -230,7 +230,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                     ))}
-                    <Button variant="secondary" className="w-full mt-4 font-bold rounded-lg shadow-sm bg-white text-blue-600 hover:bg-slate-50 transition-colors" onClick={() => navigate('/docs')}>
+                    <Button variant="secondary" className="w-full mt-4 font-bold rounded-lg shadow-sm bg-white text-blue-600 hover:bg-muted transition-colors" onClick={() => navigate('/docs')}>
                       Continue Setup
                     </Button>
                   </CardContent>

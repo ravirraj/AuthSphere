@@ -197,7 +197,7 @@ const SessionManagement = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background/50 dark:bg-slate-900/50">
+        <div className="min-h-screen bg-background">
             <div className="container mx-auto py-16 px-6 max-w-5xl animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-2">
                     <div className="space-y-4">
