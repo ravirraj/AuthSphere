@@ -143,7 +143,7 @@ const Docs = () => {
                 {[
                   { icon: ShieldCheck, title: "Hardened Security", desc: "PKCE-compliant flows with automated token rotation." },
                   { icon: Cpu, title: "Edge Auth", desc: "Global auth persistence with sub-30ms verification." },
-                  { icon: Globe, title: "Multi-Provider", desc: "One API for Google, GitHub, Discord, and more." }
+                  { icon: Globe, title: "Multi-Provider", desc: "One API for Google, GitHub, Discord, LinkedIn, GitLab, Twitch, Bitbucket, and Microsoft." }
                 ].map((item, i) => (
                   <Card key={i} className="bg-muted/30 border-none shadow-none">
                     <CardHeader className="p-4">
