@@ -5,7 +5,7 @@ import { LogOut, Sparkles, ArrowRight, Github, Chrome, MessageSquare, Shield } f
 
 // --- Initialize SDK ---
 AuthSphere.initAuth({
-  publicKey: '86f2a6184bef2c6d9967a12fe75e516d',
+  publicKey: '1b2eb92b0fff434e40146da67219a346',
   redirectUri: window.location.origin + '/callback',
   baseUrl: 'http://localhost:8000'
 });
