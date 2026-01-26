@@ -50,34 +50,55 @@ const ProjectSettings = ({ project, onUpdated }) => {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // 🟢 Zero-friction (READY) — free, personal account, OAuth just works
   const allProvidersList = [
-    { id: "google", name: "Google", logo: ProviderLogos.google, color: "hover:border-blue-500/50", status: "ready" },
-    { id: "github", name: "GitHub", logo: ProviderLogos.github, color: "hover:border-slate-500/50", status: "ready" },
-    { id: "discord", name: "Discord", logo: ProviderLogos.discord, color: "hover:border-indigo-500/50", status: "ready" },
-    { id: "linkedin", name: "LinkedIn", logo: ProviderLogos.linkedin, color: "hover:border-blue-600/50", status: "ready" },
-    { id: "gitlab", name: "GitLab", logo: ProviderLogos.gitlab, color: "hover:border-orange-500/50", status: "ready" },
-    { id: "twitch", name: "Twitch", logo: ProviderLogos.twitch, color: "hover:border-purple-500/50", status: "ready" },
-    { id: "bitbucket", name: "Bitbucket", logo: ProviderLogos.bitbucket, color: "hover:border-blue-400/50", status: "ready" },
-    { id: "microsoft", name: "Microsoft", logo: ProviderLogos.microsoft, color: "hover:border-teal-500/50", status: "ready" },
-    { id: "facebook", name: "Facebook", logo: ProviderLogos.facebook, color: "hover:border-blue-700/50", status: "planned" },
-    { id: "twitter", name: "Twitter (X)", logo: ProviderLogos.twitter, color: "hover:border-black/50", status: "planned" },
-    { id: "slack", name: "Slack", logo: ProviderLogos.slack, color: "hover:border-purple-600/50", status: "planned" },
-    { id: "apple", name: "Apple", logo: ProviderLogos.apple, color: "hover:border-black/50", status: "planned" },
-    { id: "spotify", name: "Spotify", logo: ProviderLogos.spotify, color: "hover:border-green-500/50", status: "planned" },
-    { id: "reddit", name: "Reddit", logo: ProviderLogos.reddit, color: "hover:border-orange-600/50", status: "planned" },
-    { id: "zoom", name: "Zoom", logo: ProviderLogos.zoom, color: "hover:border-blue-400/50", status: "planned" },
-    { id: "dropbox", name: "Dropbox", logo: ProviderLogos.dropbox, color: "hover:border-blue-600/50", status: "planned" },
-    { id: "salesforce", name: "Salesforce", logo: ProviderLogos.salesforce, color: "hover:border-blue-500/50", status: "planned" },
-    { id: "hubspot", name: "HubSpot", logo: ProviderLogos.hubspot, color: "hover:border-orange-500/50", status: "planned" },
-    { id: "instagram", name: "Instagram", logo: ProviderLogos.instagram, color: "hover:border-pink-500/50", status: "planned" },
-    { id: "pinterest", name: "Pinterest", logo: ProviderLogos.pinterest, color: "hover:border-red-600/50", status: "planned" },
-    { id: "yahoo", name: "Yahoo", logo: ProviderLogos.yahoo, color: "hover:border-purple-700/50", status: "planned" },
+    { id: "google", name: "Google", logo: ProviderLogos.google, status: "ready" },
+    { id: "github", name: "GitHub", logo: ProviderLogos.github, status: "ready" },
+    { id: "discord", name: "Discord", logo: ProviderLogos.discord, status: "ready" },
+    { id: "gitlab", name: "GitLab", logo: ProviderLogos.gitlab, status: "ready" },
+    { id: "microsoft", name: "Microsoft", logo: ProviderLogos.microsoft, status: "ready" },
+    { id: "bitbucket", name: "Bitbucket", logo: ProviderLogos.bitbucket, status: "ready" },
+    { id: "reddit", name: "Reddit", logo: ProviderLogos.reddit, status: "ready" },
+    { id: "dropbox", name: "Dropbox", logo: ProviderLogos.dropbox, status: "ready" },
+    { id: "yahoo", name: "Yahoo", logo: ProviderLogos.yahoo, status: "ready" },
+    { id: "twitch", name: "Twitch", logo: ProviderLogos.twitch, status: "ready" },
+    { id: "stackexchange", name: "Stack Exchange", logo: "https://cdn.sstatic.net/Sites/stackoverflow/Img/apple-touch-icon.png", status: "ready" },
+    { id: "atlassian", name: "Atlassian", logo: "https://wac-cdn.atlassian.com/assets/img/favicons/atlassian/favicon.png", status: "ready" },
+    { id: "paypal", name: "PayPal", logo: "https://www.paypalobjects.com/webstatic/icon/pp258.png", status: "ready" },
+    { id: "line", name: "LINE", logo: "https://scdn.line-apps.com/n/line_add_friends/logo/LINE_APP.png", status: "ready" },
+    { id: "kakao", name: "Kakao", logo: "https://t1.kakaocdn.net/kakaocorp/kakaocorp/admin/5f9c58c2017800001.png", status: "ready" },
+    { id: "naver", name: "Naver", logo: "https://s.pstatic.net/static/www/mobile/edit/2016/0705/mobile_212852414260.png", status: "ready" },
+
+    // 🟡 Restricted (works but annoying)
+    { id: "apple", name: "Apple", logo: ProviderLogos.apple, status: "restricted" },
+    { id: "facebook", name: "Facebook", logo: ProviderLogos.facebook, status: "restricted" },
+    { id: "twitter", name: "Twitter (X)", logo: ProviderLogos.twitter, status: "restricted" },
+    { id: "spotify", name: "Spotify", logo: ProviderLogos.spotify, status: "restricted" },
+    { id: "slack", name: "Slack", logo: ProviderLogos.slack, status: "restricted" },
+    { id: "zoom", name: "Zoom", logo: ProviderLogos.zoom, status: "restricted" },
+    { id: "amazon", name: "Amazon", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg", status: "restricted" },
+    { id: "yandex", name: "Yandex", logo: "https://yastatic.net/s3/home/logos/services/yandex.svg", status: "restricted" },
+    { id: "vk", name: "VK", logo: "https://vk.com/images/icons/pwa/apple_touch_icon_152.png", status: "restricted" },
+
+    // 🔴 Enterprise / corporate (not dev-friendly)
+    { id: "linkedin", name: "LinkedIn", logo: ProviderLogos.linkedin, status: "enterprise" },
+    { id: "instagram", name: "Instagram", logo: ProviderLogos.instagram, status: "enterprise" },
+    { id: "pinterest", name: "Pinterest", logo: ProviderLogos.pinterest, status: "enterprise" },
+    { id: "salesforce", name: "Salesforce", logo: ProviderLogos.salesforce, status: "enterprise" },
+    { id: "hubspot", name: "HubSpot", logo: ProviderLogos.hubspot, status: "enterprise" },
+    { id: "okta", name: "Okta", logo: "https://www.okta.com/sites/default/files/Okta_Logo_BrightBlue_Medium.png", status: "enterprise" },
+    { id: "azuread", name: "Azure AD", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a8/Microsoft_Azure_Logo.svg", status: "enterprise" },
+    { id: "workday", name: "Workday", logo: "https://www.workday.com/content/dam/web/images/icons/wd-logo.svg", status: "enterprise" }
   ];
 
   const filteredProviders = allProvidersList.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Separate ready and upcoming providers
+  const readyProviders = filteredProviders.filter(p => p.status === 'ready');
+  const upcomingProviders = filteredProviders.filter(p => p.status === 'restricted' || p.status === 'enterprise');
 
   const hasChanges = useMemo(() => {
     const activeProviders = Object.keys(providers).filter(p => providers[p]).sort();
@@ -100,6 +121,9 @@ const ProjectSettings = ({ project, onUpdated }) => {
   const removeUri = (index) => setRedirectUris(redirectUris.filter((_, i) => i !== index));
 
   const toggleProvider = (id) => {
+    const provider = allProvidersList.find(p => p.id === id);
+    // Only allow toggling ready providers
+    if (provider?.status !== 'ready') return;
     setProviders(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
@@ -229,44 +253,152 @@ const ProjectSettings = ({ project, onUpdated }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-4">
-            {filteredProviders.length > 0 ? (
-              filteredProviders.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => toggleProvider(p.id)}
-                  className={`
-                    flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all duration-200
-                    ${providers[p.id] ? 'bg-primary/5 border-primary shadow-sm' : 'bg-card hover:bg-muted/50'} 
-                    ${p.color}
-                    ${p.status === 'planned' ? 'opacity-70 grayscale-[0.5]' : ''}
-                  `}
-                >
-                  <div className={`h-10 w-10 flex-shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center ${providers[p.id] ? 'ring-2 ring-primary/20' : ''}`}>
-                    <img
-                      src={p.logo}
-                      alt={p.name}
-                      className="h-full w-full object-contain"
-                      onError={(e) => { e.target.src = "https://www.svgrepo.com/show/506680/app-development.svg" }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{p.name}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                      {providers[p.id] ? 'Enabled' : (p.status === 'ready' ? 'Ready' : 'Coming Soon')}
-                    </p>
-                  </div>
-                  <Checkbox
-                    id={p.id}
-                    checked={providers[p.id] || false}
-                    onCheckedChange={() => toggleProvider(p.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="rounded-full h-5 w-5"
-                  />
+          <div className="space-y-6">
+            {/* Ready Providers Section */}
+            {readyProviders.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {readyProviders.map((p) => {
+                  const isDisabled = p.status !== 'ready';
+
+                  const getStatusLabel = () => {
+                    if (providers[p.id]) return 'Enabled';
+                    if (p.status === 'ready') return '✓ Ready';
+                    if (p.status === 'restricted') return '🔜 Coming Soon';
+                    if (p.status === 'enterprise') return '🔜 Coming Soon';
+                    return 'Available';
+                  };
+
+                  const getStatusColor = () => {
+                    if (providers[p.id]) return 'text-primary';
+                    if (p.status === 'ready') return 'text-green-600 dark:text-green-500';
+                    if (p.status === 'restricted') return 'text-amber-600 dark:text-amber-500';
+                    if (p.status === 'enterprise') return 'text-purple-600 dark:text-purple-500';
+                    return 'text-muted-foreground';
+                  };
+
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => !isDisabled && toggleProvider(p.id)}
+                      className={`
+                        flex items-center gap-4 p-4 border rounded-xl transition-all duration-200
+                        ${isDisabled
+                          ? 'opacity-60 cursor-not-allowed bg-muted/30'
+                          : 'cursor-pointer ' + (providers[p.id] ? 'bg-primary/5 border-primary shadow-sm' : 'bg-card hover:bg-muted/50')
+                        } 
+                        ${!isDisabled && p.color}
+                      `}
+                      title={isDisabled ? `${p.name} - Coming soon!` : `Click to ${providers[p.id] ? 'disable' : 'enable'} ${p.name}`}
+                    >
+                      <div className={`h-10 w-10 flex-shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center ${providers[p.id] && !isDisabled ? 'ring-2 ring-primary/20' : ''}`}>
+                        <img
+                          src={p.logo}
+                          alt={p.name}
+                          className={`h-full w-full object-contain ${isDisabled ? 'grayscale' : ''}`}
+                          onError={(e) => { e.target.src = "https://www.svgrepo.com/show/506680/app-development.svg" }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{p.name}</p>
+                        <p className={`text-[10px] uppercase tracking-wider font-bold ${getStatusColor()}`}>
+                          {getStatusLabel()}
+                        </p>
+                      </div>
+                      <Checkbox
+                        id={p.id}
+                        checked={providers[p.id] || false}
+                        onCheckedChange={() => !isDisabled && toggleProvider(p.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isDisabled}
+                        className="rounded-full h-5 w-5"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Upcoming Section Divider */}
+            {upcomingProviders.length > 0 && (
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-dashed border-muted-foreground/30"></div>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl">
+                <div className="relative flex justify-center">
+                  <span className="bg-background px-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    🔜 Upcoming
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Upcoming Providers Section */}
+            {upcomingProviders.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {upcomingProviders.map((p) => {
+                  const isDisabled = p.status !== 'ready';
+
+                  const getStatusLabel = () => {
+                    if (providers[p.id]) return 'Enabled';
+                    if (p.status === 'ready') return '✓ Ready';
+                    if (p.status === 'restricted') return '🔜 Coming Soon';
+                    if (p.status === 'enterprise') return '🔜 Coming Soon';
+                    return 'Available';
+                  };
+
+                  const getStatusColor = () => {
+                    if (providers[p.id]) return 'text-primary';
+                    if (p.status === 'ready') return 'text-green-600 dark:text-green-500';
+                    if (p.status === 'restricted') return 'text-amber-600 dark:text-amber-500';
+                    if (p.status === 'enterprise') return 'text-purple-600 dark:text-purple-500';
+                    return 'text-muted-foreground';
+                  };
+
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => !isDisabled && toggleProvider(p.id)}
+                      className={`
+                        flex items-center gap-4 p-4 border rounded-xl transition-all duration-200
+                        ${isDisabled
+                          ? 'opacity-60 cursor-not-allowed bg-muted/30'
+                          : 'cursor-pointer ' + (providers[p.id] ? 'bg-primary/5 border-primary shadow-sm' : 'bg-card hover:bg-muted/50')
+                        } 
+                        ${!isDisabled && p.color}
+                      `}
+                      title={isDisabled ? `${p.name} - Coming soon!` : `Click to ${providers[p.id] ? 'disable' : 'enable'} ${p.name}`}
+                    >
+                      <div className={`h-10 w-10 flex-shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center ${providers[p.id] && !isDisabled ? 'ring-2 ring-primary/20' : ''}`}>
+                        <img
+                          src={p.logo}
+                          alt={p.name}
+                          className={`h-full w-full object-contain ${isDisabled ? 'grayscale' : ''}`}
+                          onError={(e) => { e.target.src = "https://www.svgrepo.com/show/506680/app-development.svg" }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{p.name}</p>
+                        <p className={`text-[10px] uppercase tracking-wider font-bold ${getStatusColor()}`}>
+                          {getStatusLabel()}
+                        </p>
+                      </div>
+                      <Checkbox
+                        id={p.id}
+                        checked={providers[p.id] || false}
+                        onCheckedChange={() => !isDisabled && toggleProvider(p.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isDisabled}
+                        className="rounded-full h-5 w-5"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* No Results State */}
+            {readyProviders.length === 0 && upcomingProviders.length === 0 && (
+              <div className="py-12 text-center border-2 border-dashed rounded-xl">
                 <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-muted-foreground">No providers found matching "{searchQuery}"</p>
               </div>

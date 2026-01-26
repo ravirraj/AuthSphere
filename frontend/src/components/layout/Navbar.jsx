@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 const Navbar = () => {
-  const { user, loading, logout } = useContext(AuthContext);
+  const { user, loading, logout, loggingOut } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -42,11 +42,10 @@ const Navbar = () => {
   ];
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all ${
-      isScrolled
-        ? "border-b bg-background/95 backdrop-blur"
-        : "bg-transparent"
-    }`}>
+    <header className={`sticky top-0 z-50 w-full transition-all ${isScrolled
+      ? "border-b bg-background/95 backdrop-blur"
+      : "bg-transparent"
+      }`}>
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
 
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -66,9 +65,8 @@ const Navbar = () => {
             <Link
               key={link.name}
               to={link.href}
-              className={`hover:text-primary transition-colors ${
-                location.pathname === link.href ? "text-primary" : "text-muted-foreground"
-              }`}
+              className={`hover:text-primary transition-colors ${location.pathname === link.href ? "text-primary" : "text-muted-foreground"
+                }`}
             >
               {link.name}
             </Link>
@@ -133,10 +131,20 @@ const Navbar = () => {
 
                 <DropdownMenuItem
                   onClick={logout}
+                  disabled={loggingOut}
                   className="text-destructive focus:text-destructive"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
+                  {loggingOut ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 border-2 border-destructive/30 border-t-destructive rounded-full animate-spin" />
+                      Logging out...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </>
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
