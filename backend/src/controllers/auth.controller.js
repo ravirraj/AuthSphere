@@ -3,6 +3,11 @@ import EndUser from "../models/endUsers.models.js";
 import { getGoogleAuthURL, getGoogleUser } from "../services/google.service.js";
 import { getGithubAuthURL, getGithubUser } from "../services/github.service.js";
 import { getDiscordAuthURL, getDiscordUser } from "../services/discord.service.js";
+import { getLinkedinAuthURL, getLinkedinUser } from "../services/linkedin.service.js";
+import { getGitlabAuthURL, getGitlabUser } from "../services/gitlab.service.js";
+import { getTwitchAuthURL, getTwitchUser } from "../services/twitch.service.js";
+import { getBitbucketAuthURL, getBitbucketUser } from "../services/bitbucket.service.js";
+import { getMicrosoftAuthURL, getMicrosoftUser } from "../services/microsoft.service.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { handleSDKCallback, authRequests } from "./sdk.controller.js";
 import bcrypt from "bcrypt";
@@ -290,5 +295,205 @@ export async function discordCallback(req, res) {
   } catch (err) {
     console.error("Discord callback error:", err);
     res.status(500).send("Discord authentication failed");
+  }
+}
+
+/* ============================================================
+   LINKEDIN
+============================================================ */
+export async function linkedinLogin(req, res) {
+  try {
+    const context = getContextFromReq(req);
+    const url = getLinkedinAuthURL(context);
+    res.redirect(url);
+  } catch (err) {
+    console.error("LinkedIn login error:", err);
+    res.status(500).send("Could not start LinkedIn login");
+  }
+}
+
+export async function linkedinCallback(req, res) {
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+      context.sdkRequest = state.split(':')[1];
+    }
+
+    const linkedinUser = await getLinkedinUser(code);
+
+    await handleSocialAuth(res, req, {
+      email: linkedinUser.email,
+      username: linkedinUser.username,
+      picture: linkedinUser.picture,
+      provider: "LinkedIn",
+      providerId: linkedinUser.sub,
+    }, context);
+  } catch (err) {
+    console.error("LinkedIn callback error:", err);
+    res.status(500).send("LinkedIn authentication failed");
+  }
+}
+
+/* ============================================================
+   GITLAB
+============================================================ */
+export async function gitlabLogin(req, res) {
+  try {
+    const context = getContextFromReq(req);
+    const url = getGitlabAuthURL(context);
+    res.redirect(url);
+  } catch (err) {
+    console.error("GitLab login error:", err);
+    res.status(500).send("Could not start GitLab login");
+  }
+}
+
+export async function gitlabCallback(req, res) {
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+      context.sdkRequest = state.split(':')[1];
+    }
+
+    const gitlabUser = await getGitlabUser(code);
+
+    await handleSocialAuth(res, req, {
+      email: gitlabUser.email,
+      username: gitlabUser.username,
+      picture: gitlabUser.picture,
+      provider: "GitLab",
+      providerId: gitlabUser.sub,
+    }, context);
+  } catch (err) {
+    console.error("GitLab callback error:", err);
+    res.status(500).send("GitLab authentication failed");
+  }
+}
+
+/* ============================================================
+   TWITCH
+============================================================ */
+export async function twitchLogin(req, res) {
+  try {
+    const context = getContextFromReq(req);
+    const url = getTwitchAuthURL(context);
+    res.redirect(url);
+  } catch (err) {
+    console.error("Twitch login error:", err);
+    res.status(500).send("Could not start Twitch login");
+  }
+}
+
+export async function twitchCallback(req, res) {
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+      context.sdkRequest = state.split(':')[1];
+    }
+
+    const twitchUser = await getTwitchUser(code);
+
+    await handleSocialAuth(res, req, {
+      email: twitchUser.email,
+      username: twitchUser.username,
+      picture: twitchUser.picture,
+      provider: "Twitch",
+      providerId: twitchUser.sub,
+    }, context);
+  } catch (err) {
+    console.error("Twitch callback error:", err);
+    res.status(500).send("Twitch authentication failed");
+  }
+}
+
+/* ============================================================
+   BITBUCKET
+============================================================ */
+export async function bitbucketLogin(req, res) {
+  try {
+    const context = getContextFromReq(req);
+    const url = getBitbucketAuthURL(context);
+    res.redirect(url);
+  } catch (err) {
+    console.error("Bitbucket login error:", err);
+    res.status(500).send("Could not start Bitbucket login");
+  }
+}
+
+export async function bitbucketCallback(req, res) {
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+      context.sdkRequest = state.split(':')[1];
+    }
+
+    const bitbucketUser = await getBitbucketUser(code);
+
+    await handleSocialAuth(res, req, {
+      email: bitbucketUser.email,
+      username: bitbucketUser.username,
+      picture: bitbucketUser.picture,
+      provider: "Bitbucket",
+      providerId: bitbucketUser.sub,
+    }, context);
+  } catch (err) {
+    console.error("Bitbucket callback error:", err);
+    res.status(500).send("Bitbucket authentication failed");
+  }
+}
+
+/* ============================================================
+   MICROSOFT
+============================================================ */
+export async function microsoftLogin(req, res) {
+  try {
+    const context = getContextFromReq(req);
+    const url = getMicrosoftAuthURL(context);
+    res.redirect(url);
+  } catch (err) {
+    console.error("Microsoft login error:", err);
+    res.status(500).send("Could not start Microsoft login");
+  }
+}
+
+export async function microsoftCallback(req, res) {
+  try {
+    const { code, state } = req.query;
+    if (!code) return res.status(400).send("Missing authorization code");
+
+    let context = { cli: false, sdkRequest: null };
+    if (state === 'cli') context.cli = true;
+    if (state && state.startsWith('sdk:')) {
+      context.sdkRequest = state.split(':')[1];
+    }
+
+    const microsoftUser = await getMicrosoftUser(code);
+
+    await handleSocialAuth(res, req, {
+      email: microsoftUser.email,
+      username: microsoftUser.username,
+      picture: microsoftUser.picture,
+      provider: "Microsoft",
+      providerId: microsoftUser.sub,
+    }, context);
+  } catch (err) {
+    console.error("Microsoft callback error:", err);
+    res.status(500).send("Microsoft authentication failed");
   }
 }

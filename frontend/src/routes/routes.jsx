@@ -11,6 +11,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import ProjectDetailPage from "@/pages/ProjectDetailPage";
 import ProjectAnalytics from "@/pages/ProjectAnalytics";
 import SessionManagement from "@/pages/SessionManagement";
+import Pricing from "@/pages/Pricing";
 
 export const routes = [
   {
@@ -18,6 +19,14 @@ export const routes = [
     element: (
       <MainLayout>
         <Home />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/pricing",
+    element: (
+      <MainLayout>
+        <Pricing />
       </MainLayout>
     ),
   },
@@ -88,12 +97,14 @@ export const routes = [
   {
     path: "*",
     element: (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold">404</h1>
-          <p className="text-muted-foreground">Page Not Found</p>
+      <MainLayout>
+        <div className="flex h-[calc(100vh-160px)] items-center justify-center">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold">404</h1>
+            <p className="text-muted-foreground">Page Not Found</p>
+          </div>
         </div>
-      </div>
+      </MainLayout>
     ),
   },
 ];

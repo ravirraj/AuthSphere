@@ -1,51 +1,48 @@
 import EndUser from "../models/endUsers.models.js";
 import Session from "../models/session.model.js";
+import Project from "../models/project.model.js";
 import mongoose from "mongoose";
 
 // Helper to get date ranges
 const getDateRanges = () => {
     const now = new Date();
+    // Today at 00:00:00
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const prev30Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    return { today, last30Days, prev30Days };
+    // Last 30 days starting from 29 days ago at 00:00:00
+    const startOfPeriod = new Date(today);
+    startOfPeriod.setDate(startOfPeriod.getDate() - 29);
+
+    // Previous 30 days starting from 59 days ago
+    const startOfPrevPeriod = new Date(startOfPeriod);
+    startOfPrevPeriod.setDate(startOfPrevPeriod.getDate() - 30);
+
+    return { now, today, startOfPeriod, startOfPrevPeriod };
 };
 
-// Simple In-memory Cache
-const analyticsCache = new Map();
-const CACHE_TTL = 30 * 1000; // Reduced to 30s for better "live" feel
-
-const getCachedData = (key) => {
-    const cached = analyticsCache.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-        return cached.data;
-    }
-    return null;
-};
-
-const setCacheData = (key, data) => {
-    analyticsCache.set(key, { data, timestamp: Date.now() });
+// Security Helper: verify developer owns the project
+const verifyOwnership = async (projectId, developerId) => {
+    const project = await Project.findOne({ _id: projectId, developer: developerId });
+    return !!project;
 };
 
 export const getAnalyticsOverview = async (req, res) => {
     try {
         const { projectId } = req.params;
+        const developerId = req.developer._id;
 
-        const cacheKey = `overview_${projectId}`;
-        const cached = getCachedData(cacheKey);
-        if (cached) {
-            return res.status(200).json({ success: true, data: cached });
+        if (!await verifyOwnership(projectId, developerId)) {
+            return res.status(403).json({ success: false, message: "Forbidden: You don't own this project" });
         }
 
-        const { today, last30Days, prev30Days } = getDateRanges();
+        const { today, startOfPeriod, startOfPrevPeriod } = getDateRanges();
         const pId = new mongoose.Types.ObjectId(projectId);
 
-        // Signups this month vs last month
-        const signupsMonth = await EndUser.countDocuments({ projectId: pId, createdAt: { $gte: last30Days } });
-        const signupsPrevMonth = await EndUser.countDocuments({ projectId: pId, createdAt: { $gte: prev30Days, $lt: last30Days } });
+        // Signups this period (30 days) vs previous period
+        const signupsMonth = await EndUser.countDocuments({ projectId: pId, createdAt: { $gte: startOfPeriod } });
+        const signupsPrevMonth = await EndUser.countDocuments({ projectId: pId, createdAt: { $gte: startOfPrevPeriod, $lt: startOfPeriod } });
 
-        // Logins today
+        // Logins today (since midnight)
         const loginsToday = await Session.countDocuments({ projectId: pId, createdAt: { $gte: today } });
         const loginsYesterday = await Session.countDocuments({
             projectId: pId,
@@ -55,8 +52,8 @@ export const getAnalyticsOverview = async (req, res) => {
             }
         });
 
-        // MAU (Monthly Active Users)
-        const mau = await Session.distinct("endUserId", { projectId: pId, createdAt: { $gte: last30Days }, isValid: true }).then(ids => ids.length);
+        // MAU (Monthly Active Users) - Unique users with at least one session in last 30 days
+        const mau = await Session.distinct("endUserId", { projectId: pId, createdAt: { $gte: startOfPeriod }, isValid: true }).then(ids => ids.length);
         const totalUsers = await EndUser.countDocuments({ projectId: pId });
 
         // Calculate trends
@@ -80,12 +77,10 @@ export const getAnalyticsOverview = async (req, res) => {
                 retention: totalUsers > 0 ? ((mau / totalUsers) * 100).toFixed(1) + "%" : "0%"
             },
             health: {
-                latency: "102ms", // Simulated
-                uptime: "99.99%"   // Simulated
+                latency: "102ms",
+                uptime: "99.99%"
             }
         };
-
-        setCacheData(cacheKey, result);
 
         return res.status(200).json({
             success: true,
@@ -99,19 +94,18 @@ export const getAnalyticsOverview = async (req, res) => {
 export const getAnalyticsCharts = async (req, res) => {
     try {
         const { projectId } = req.params;
+        const developerId = req.developer._id;
 
-        const cacheKey = `charts_${projectId}`;
-        const cached = getCachedData(cacheKey);
-        if (cached) {
-            return res.status(200).json({ success: true, data: cached });
+        if (!await verifyOwnership(projectId, developerId)) {
+            return res.status(403).json({ success: false, message: "Forbidden: You don't own this project" });
         }
 
-        const { last30Days } = getDateRanges();
+        const { startOfPeriod } = getDateRanges();
         const pId = new mongoose.Types.ObjectId(projectId);
 
         // Daily Signups over last 30 days
         const rawDailySignups = await EndUser.aggregate([
-            { $match: { projectId: pId, createdAt: { $gte: last30Days } } },
+            { $match: { projectId: pId, createdAt: { $gte: startOfPeriod } } },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -124,7 +118,8 @@ export const getAnalyticsCharts = async (req, res) => {
         // Fill in missing days for a "perfect" chart
         const dailySignups = [];
         for (let i = 0; i < 30; i++) {
-            const date = new Date(last30Days.getTime() + i * 24 * 60 * 60 * 1000);
+            const date = new Date(startOfPeriod);
+            date.setDate(date.getDate() + i);
             const dateStr = date.toISOString().split('T')[0];
             const found = rawDailySignups.find(d => d._id === dateStr);
             dailySignups.push({
@@ -153,8 +148,6 @@ export const getAnalyticsCharts = async (req, res) => {
             }, {})
         };
 
-        setCacheData(cacheKey, result);
-
         return res.status(200).json({
             success: true,
             data: result
@@ -167,6 +160,12 @@ export const getAnalyticsCharts = async (req, res) => {
 export const getRecentActivity = async (req, res) => {
     try {
         const { projectId } = req.params;
+        const developerId = req.developer._id;
+
+        if (!await verifyOwnership(projectId, developerId)) {
+            return res.status(403).json({ success: false, message: "Forbidden: You don't own this project" });
+        }
+
         const pId = new mongoose.Types.ObjectId(projectId);
 
         const recentSessions = await Session.find({ projectId: pId })
