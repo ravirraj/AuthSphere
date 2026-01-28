@@ -12,6 +12,9 @@ import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
 import { handleSDKCallback, authRequests } from "./sdk.controller.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import axios from "axios";
+import DeveloperSession from "../models/developerSession.model.js";
+import { parseUserAgent } from "../utils/userAgentParser.js";
 import { conf } from "../configs/env.js";
 
 /* ============================================================
@@ -73,6 +76,38 @@ const handleSocialAuth = async (res, req, userData, context = {}) => {
 
   res.cookie("accessToken", accessToken, cookieOptions);
   res.cookie("refreshToken", refreshToken, cookieOptions);
+
+  // ---------- CREATE SESSION RECORD ----------
+  try {
+    const userAgent = req.headers['user-agent'] || '';
+    const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    let location = { city: "Unknown", country: "Unknown", countryCode: "???" };
+    try {
+      const geoResponse = await axios.get(`https://ipapi.co/${ipAddress}/json/`).catch(() => null);
+      if (geoResponse && geoResponse.data && !geoResponse.data.error) {
+        location = {
+          city: geoResponse.data.city,
+          country: geoResponse.data.country_name,
+          countryCode: geoResponse.data.country_code
+        };
+      }
+    } catch (geoError) {
+      console.error("Geo lookup failed in social auth:", geoError.message);
+    }
+
+    await DeveloperSession.create({
+      developer: developer._id,
+      refreshToken: refreshToken,
+      ipAddress: ipAddress,
+      userAgent: userAgent,
+      deviceInfo: parseUserAgent(userAgent),
+      location: location,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    });
+  } catch (sessionError) {
+    console.error("Failed to create developer session in social auth:", sessionError.message);
+  }
 
   // ---------- CLI LOGIN ----------
   if (cli === "true" || cli === true) {

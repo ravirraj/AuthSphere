@@ -72,7 +72,7 @@ const Docs = () => {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="h-8 w-8 rounded-lg border flex items-center justify-center">
-              <img src="/assets/logo.png" alt="AuthSphere" className="h-6 w-6 object-contain mix-blend-multiply dark:invert" />
+              <img src="/assets/logo.png" alt="AuthSphere" className="h-6 w-6 object-contain dark:invert" />
             </div>
             <span className="font-bold">AuthSphere</span>
             <Badge variant="outline" className="hidden sm:inline-flex ml-2 text-xs">v2.4.0</Badge>

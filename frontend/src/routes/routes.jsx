@@ -12,6 +12,7 @@ import ProjectDetailPage from "@/pages/ProjectDetailPage";
 import ProjectAnalytics from "@/pages/ProjectAnalytics";
 import SessionManagement from "@/pages/SessionManagement";
 import Pricing from "@/pages/Pricing";
+import Settings from "@/pages/Settings";
 
 export const routes = [
   {
@@ -80,6 +81,16 @@ export const routes = [
       <ProtectedRoute>
         <MainLayout>
           <ProjectAnalytics />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <Settings />
         </MainLayout>
       </ProtectedRoute>
     ),

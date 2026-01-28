@@ -31,8 +31,8 @@ export const registerDeveloper = async (req, res) => {
     });
 
     if (existedDeveloper) {
-      return res.status(409).json({ 
-        message: "Developer with email or username already exists" 
+      return res.status(409).json({
+        message: "Developer with email or username already exists"
       });
     }
 
@@ -93,7 +93,7 @@ export const loginDeveloper = async (req, res) => {
     try {
       const userAgent = req.headers['user-agent'] || '';
       const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-      
+
       let location = { city: "Unknown", country: "Unknown", countryCode: "???" };
       try {
         // Optional geolocation - using a free service (ipapi.co is limited but works for demo)
@@ -158,8 +158,8 @@ export const refreshAccessToken = async (req, res) => {
     const developer = await Developer.findById(decodedToken?._id);
 
     if (!developer || incomingRefreshToken !== developer.refreshToken) {
-      return res.status(401).json({ 
-        message: "Refresh token is expired or invalid" 
+      return res.status(401).json({
+        message: "Refresh token is expired or invalid"
       });
     }
 
@@ -173,10 +173,10 @@ export const refreshAccessToken = async (req, res) => {
     try {
       await DeveloperSession.findOneAndUpdate(
         { refreshToken: incomingRefreshToken, developer: developer._id },
-        { 
-          refreshToken: newRefreshToken, 
+        {
+          refreshToken: newRefreshToken,
           lastActive: new Date(),
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) 
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         }
       );
     } catch (sessionError) {
@@ -248,35 +248,100 @@ export const getCurrentDeveloper = async (req, res) => {
 
 /* ---------------------- DASHBOARD STATS ---------------------- */
 export const getDashboardStats = async (req, res) => {
-    try {
-        const developerId = req.developer._id;
+  try {
+    const developerId = req.developer._id;
 
-        // Count projects
-        const totalProjects = await Project.countDocuments({ developer: developerId });
+    // Count projects
+    const totalProjects = await Project.countDocuments({ developer: developerId });
 
-        // Get all project IDs for this developer
-        const projects = await Project.find({ developer: developerId }).select('_id');
-        const projectIds = projects.map(p => p._id);
+    // Get all project IDs for this developer
+    const projects = await Project.find({ developer: developerId }).select('_id');
+    const projectIds = projects.map(p => p._id);
 
-        // Count end users across all those projects
-        const totalEndUsers = await EndUser.countDocuments({ projectId: { $in: projectIds } });
+    // Count end users across all those projects
+    const totalEndUsers = await EndUser.countDocuments({ projectId: { $in: projectIds } });
 
-        // Get latest end users
-        const recentUsers = await EndUser.find({ projectId: { $in: projectIds } })
-            .select('email username createdAt projectId')
-            .populate('projectId', 'name')
-            .sort({ createdAt: -1 })
-            .limit(5);
+    // Get latest end users
+    const recentUsers = await EndUser.find({ projectId: { $in: projectIds } })
+      .select('email username createdAt projectId')
+      .populate('projectId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
 
-        return res.status(200).json({
-            success: true,
-            data: {
-                totalProjects,
-                totalEndUsers,
-                recentUsers
-            }
-        });
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalProjects,
+        totalEndUsers,
+        recentUsers
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+/* ---------------------- UPDATE PROFILE ---------------------- */
+export const updateDeveloperProfile = async (req, res) => {
+  try {
+    const { username } = req.body;
+    const developerId = req.developer._id;
+
+    if (!username || username.trim() === "") {
+      return res.status(400).json({ message: "Username is required" });
     }
+
+    // Check if username is taken by another developer
+    const existing = await Developer.findOne({
+      username,
+      _id: { $ne: developerId }
+    });
+
+    if (existing) {
+      return res.status(409).json({ message: "Username is already taken" });
+    }
+
+    const updatedDeveloper = await Developer.findByIdAndUpdate(
+      developerId,
+      { $set: { username } },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedDeveloper
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+/* ---------------------- DELETE ACCOUNT ---------------------- */
+export const deleteDeveloperAccount = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+
+    // 1. Delete all projects for this developer
+    await Project.deleteMany({ developer: developerId });
+
+    // 2. Delete all sessions for this developer
+    await DeveloperSession.deleteMany({ developer: developerId });
+
+    // 3. Delete the developer record itself
+    await Developer.findByIdAndDelete(developerId);
+
+    const options = getCookieOptions();
+
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json({
+        success: true,
+        message: "Account and all associated data deleted permanently"
+      });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
 };

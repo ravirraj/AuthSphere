@@ -21,7 +21,7 @@ import {
 import { ModeToggle } from "@/components/mode-toggle";
 import {
   User, LogOut, LayoutDashboard, Settings,
-  Menu, Shield, ChevronDown
+  Menu, Shield, ChevronDown, Github
 } from "lucide-react";
 
 const Navbar = () => {
@@ -53,7 +53,7 @@ const Navbar = () => {
             <img
               src="/assets/logo.png"
               alt="AuthSphere"
-              className="h-6 w-6 object-contain mix-blend-multiply dark:invert"
+              className="h-6 w-6 object-contain dark:invert"
             />
           </div>
           <span className="font-bold text-xl">AuthSphere</span>
@@ -76,6 +76,17 @@ const Navbar = () => {
         {/* Auth Section */}
         <div className="flex items-center gap-2">
 
+          <Button variant="ghost" size="icon" asChild className="rounded-full w-9 h-9">
+            <a
+              href="https://github.com/madhav9757/AuthSphere"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center"
+            >
+              <Github className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">GitHub repository</span>
+            </a>
+          </Button>
           <ModeToggle />
 
           {loading ? (
