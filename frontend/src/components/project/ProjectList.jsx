@@ -4,7 +4,6 @@ import ProjectCard from "./ProjectCard";
 import CreateProjectModal from "./CreateProjectModal";
 import ProjectSkeleton from "./ProjectSkeleton";
 import EmptyState from "./EmptyState";
-import GettingStartedWizard from "./GettingStartedWizard";
 
 import { getProjects } from "@/api/ProjectAPI";
 
@@ -95,12 +94,6 @@ const ProjectList = () => {
           setNewProject(project);
           setTimeout(() => setWizardOpen(true), 300);
         }}
-      />
-
-      <GettingStartedWizard
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        project={newProject}
       />
     </section>
   );

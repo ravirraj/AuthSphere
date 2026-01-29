@@ -87,7 +87,8 @@ const ProvidersPage = () => {
         );
     }, [searchQuery]);
 
-    const activeProviders = filteredProviders.filter(p => p.status !== 'coming_soon');
+    const activeProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && backendConfig[p.id]);
+    const setupProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && !backendConfig[p.id]);
     const upcomingProviders = filteredProviders.filter(p => p.status === 'coming_soon');
 
     const toggleProvider = (id) => {
@@ -160,31 +161,65 @@ const ProvidersPage = () => {
                 </div>
             </div>
 
-            <div className="container mx-auto py-8 px-6 max-w-[1600px] space-y-12">
-                {/* CATEGORY: READY TO USE */}
-                <section className="space-y-6">
-                    <div className="flex items-center justify-between">
+            <div className="container mx-auto py-8 px-6 max-w-[1800px] space-y-10">
+
+                {/* SECTION 1: LIVE & READY */}
+                {activeProviders.length > 0 && (
+                    <section className="space-y-4">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-base font-bold">Ready to Integrate</h2>
+                                    <p className="text-[11px] text-muted-foreground">Fully configured in backend .env and ready for production.</p>
+                                </div>
+                            </div>
+                            <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[10px] uppercase font-bold px-2">
+                                {activeProviders.length} Configured
+                            </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+                            {activeProviders.map((p) => (
+                                <ProviderSmallCard
+                                    key={p.id}
+                                    p={p}
+                                    isSelected={selectedProviders[p.id]}
+                                    isConfigured={true}
+                                    onToggle={toggleProvider}
+                                    onViewDocs={setSelectedSpec}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* SECTION 2: SETUP REQUIRED */}
+                <section className="space-y-4">
+                    <div className="flex items-center justify-between border-b pb-3">
                         <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                <Zap className="h-4 w-4 text-blue-500" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold">Ready to Integrate</h2>
-                                <p className="text-xs text-muted-foreground">Identity providers currently available for production use.</p>
+                                <h2 className="text-base font-bold">Available Catalog</h2>
+                                <p className="text-[11px] text-muted-foreground">Supported providers needing backend configuration (Client ID/Secret).</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20">
-                            {activeProviders.length} Available
+                        <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[10px] uppercase font-bold px-2">
+                            {setupProviders.length} Available
                         </Badge>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                        {activeProviders.map((p) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+                        {setupProviders.map((p) => (
                             <ProviderSmallCard
                                 key={p.id}
                                 p={p}
                                 isSelected={selectedProviders[p.id]}
-                                isConfigured={backendConfig[p.id]}
+                                isConfigured={false}
                                 onToggle={toggleProvider}
                                 onViewDocs={setSelectedSpec}
                             />
@@ -192,24 +227,24 @@ const ProvidersPage = () => {
                     </div>
                 </section>
 
-                {/* CATEGORY: COMING SOON */}
-                <section className="space-y-6 pt-8 border-t border-dashed">
-                    <div className="flex items-center justify-between">
+                {/* SECTION 3: ROADMAP/COMING SOON */}
+                <section className="space-y-4 pt-4">
+                    <div className="flex items-center justify-between border-b pb-3 border-dashed">
                         <div className="flex items-center gap-2">
                             <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                                <Activity className="h-5 w-5 text-amber-500" />
+                                <Activity className="h-4 w-4 text-amber-500" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold">Upcoming Platforms</h2>
-                                <p className="text-xs text-muted-foreground">Roadmapped providers currently in development or testing.</p>
+                                <h2 className="text-base font-bold">Upcoming Platforms</h2>
+                                <p className="text-[11px] text-muted-foreground">Roadmapped providers currently in development or testing.</p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20">
+                        <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20 text-[10px] uppercase font-bold px-2">
                             {upcomingProviders.length} Coming Soon
                         </Badge>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 opacity-75 grayscale-[0.5]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 opacity-60 hover:opacity-100 transition-opacity">
                         {upcomingProviders.map((p) => (
                             <ProviderSmallCard
                                 key={p.id}
