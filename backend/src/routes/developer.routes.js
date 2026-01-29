@@ -8,6 +8,9 @@ import {
   getDashboardStats,
   updateDeveloperProfile,
   deleteDeveloperAccount,
+  updateDeveloperPreferences,
+  updateDeveloperOrganization,
+  getDeveloperSettings,
 } from "../controllers/developer.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -23,5 +26,10 @@ router.route("/stats").get(verifyJWT, getDashboardStats);
 
 router.route("/profile").put(verifyJWT, updateDeveloperProfile);
 router.route("/account").delete(verifyJWT, deleteDeveloperAccount);
+
+// New Settings Routes
+router.route("/settings").get(verifyJWT, getDeveloperSettings);
+router.route("/preferences").put(verifyJWT, updateDeveloperPreferences);
+router.route("/organization").put(verifyJWT, updateDeveloperOrganization);
 
 export default router;

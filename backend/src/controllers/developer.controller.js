@@ -393,3 +393,88 @@ export const deleteDeveloperAccount = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+/* ---------------------- UPDATE PREFERENCES ---------------------- */
+export const updateDeveloperPreferences = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+    const { preferences } = req.body;
+
+    if (!preferences) {
+      return res.status(400).json({ message: "Preferences data is required" });
+    }
+
+    const updatedDeveloper = await Developer.findByIdAndUpdate(
+      developerId,
+      { $set: { preferences } },
+      { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Preferences updated successfully",
+      data: updatedDeveloper
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+/* ---------------------- UPDATE ORGANIZATION INFO ---------------------- */
+export const updateDeveloperOrganization = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+    const { organization, website, bio } = req.body;
+
+    const updateData = {};
+    if (organization !== undefined) updateData.organization = organization;
+    if (website !== undefined) updateData.website = website;
+    if (bio !== undefined) updateData.bio = bio;
+
+    const updatedDeveloper = await Developer.findByIdAndUpdate(
+      developerId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    await logEvent({
+      developerId,
+      action: "ORGANIZATION_INFO_UPDATED",
+      description: "Developer organization information updated.",
+      category: "account",
+      metadata: {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Organization info updated successfully",
+      data: updatedDeveloper
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+/* ---------------------- GET FULL SETTINGS ---------------------- */
+export const getDeveloperSettings = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+
+    const developer = await Developer.findById(developerId)
+      .select("-password -refreshToken");
+
+    if (!developer) {
+      return res.status(404).json({ message: "Developer not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: developer
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
