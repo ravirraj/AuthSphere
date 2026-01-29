@@ -18,7 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
   User, LogOut, LayoutDashboard, Settings,
   Menu, Shield, ChevronDown, Github, Activity
@@ -87,7 +87,7 @@ const Navbar = () => {
               <span className="sr-only">GitHub repository</span>
             </a>
           </Button>
-          <ModeToggle />
+          <AnimatedThemeToggler />
 
           {loading ? (
             <div className="h-8 w-8 animate-pulse bg-muted rounded-full" />

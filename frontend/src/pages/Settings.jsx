@@ -28,7 +28,7 @@ import {
     Smartphone
 } from "lucide-react";
 import { toast } from "sonner";
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { updateProfile, deleteAccount } from "@/api/DeveloperAPI";
@@ -201,7 +201,7 @@ const Settings = () => {
                                         Switch between light, dark, and system themes.
                                     </p>
                                 </div>
-                                <ModeToggle />
+                                <AnimatedThemeToggler />
                             </div>
                             <Separator />
                             <div className="flex items-center justify-between">

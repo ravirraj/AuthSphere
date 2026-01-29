@@ -153,7 +153,6 @@
   }
 }
 
-
 /* Custom Scrollbar for AuthSphere */
 ::-webkit-scrollbar {
   width: 10px;
@@ -194,4 +193,9 @@
 
 .dark * {
   scrollbar-color: oklch(1 0 0 / 15%) transparent;
+}
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
 }

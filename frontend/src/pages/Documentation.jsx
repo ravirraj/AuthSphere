@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
   BookOpen, Zap, ShieldCheck, Copy, CheckCircle2,
   Menu, X, Terminal, Github, RefreshCcw, ExternalLink,
@@ -79,7 +79,7 @@ const Docs = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-4">
-            <ModeToggle />
+            <AnimatedThemeToggler />
             <Button size="sm" variant="ghost" asChild>
               <a href="https://github.com" target="_blank" rel="noopener noreferrer">
                 <Github className="h-4 w-4" />
@@ -91,7 +91,7 @@ const Docs = () => {
           </div>
 
           <div className="flex items-center md:hidden gap-2">
-            <ModeToggle />
+            <AnimatedThemeToggler />
             <button className="p-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
