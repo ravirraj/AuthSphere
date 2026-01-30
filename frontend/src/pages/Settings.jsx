@@ -1,8 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
     Card,
     CardContent,
@@ -11,12 +13,18 @@ import {
     CardTitle,
     CardFooter,
 } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     User,
     Mail,
-    Lock,
     Bell,
     Shield,
     Palette,
@@ -25,18 +33,29 @@ import {
     Save,
     AlertCircle,
     UserCircle,
-    Smartphone
+    Smartphone,
+    Building2,
+    Code,
+    Zap,
+    LayoutGrid,
+    List
 } from "lucide-react";
 import { toast } from "sonner";
-import { ModeToggle } from "@/components/mode-toggle";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { updateProfile, deleteAccount } from "@/api/DeveloperAPI";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { Link, useNavigate } from "react-router-dom";
+import {
+    updateProfile,
+    deleteAccount,
+    getDeveloperSettings,
+    updatePreferences,
+    updateOrganization
+} from "@/api/DeveloperAPI";
 import { Badge } from "@/components/ui/badge";
 
 const Settings = () => {
     const { user, setUser, logout } = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
+    const [settingsLoading, setSettingsLoading] = useState(true);
     const navigate = useNavigate();
 
     // Profile State
@@ -44,6 +63,66 @@ const Settings = () => {
         username: user?.username || "",
         email: user?.email || "",
     });
+
+    // Organization State
+    const [orgData, setOrgData] = useState({
+        organization: "",
+        website: "",
+        bio: "",
+    });
+
+    // Preferences State
+    const [preferences, setPreferences] = useState({
+        notifications: {
+            email: {
+                projectUpdates: true,
+                securityAlerts: true,
+                weeklyDigest: false,
+                newUserSignups: false,
+            },
+            inApp: {
+                enabled: true,
+                sound: false,
+            }
+        },
+        api: {
+            defaultRateLimit: 1000,
+            enableCors: true,
+            allowedIPs: [],
+        },
+        dashboard: {
+            defaultView: 'grid',
+            itemsPerPage: 10,
+            showAnalytics: true,
+        }
+    });
+
+    // Load full settings on mount
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            setSettingsLoading(true);
+            const res = await getDeveloperSettings();
+            if (res.success) {
+                const dev = res.data;
+                setOrgData({
+                    organization: dev.organization || "",
+                    website: dev.website || "",
+                    bio: dev.bio || "",
+                });
+                if (dev.preferences) {
+                    setPreferences(dev.preferences);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load settings:", error);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
@@ -56,6 +135,34 @@ const Settings = () => {
             }
         } catch (error) {
             toast.error(error.message || "Failed to update profile");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOrgUpdate = async () => {
+        try {
+            setLoading(true);
+            const res = await updateOrganization(orgData);
+            if (res.success) {
+                toast.success("Organization info updated!");
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to update organization");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePreferencesUpdate = async () => {
+        try {
+            setLoading(true);
+            const res = await updatePreferences(preferences);
+            if (res.success) {
+                toast.success("Preferences saved!");
+            }
+        } catch (error) {
+            toast.error(error.message || "Failed to update preferences");
         } finally {
             setLoading(false);
         }
@@ -81,41 +188,69 @@ const Settings = () => {
         }
     };
 
+    const updateNotificationPref = (category, key, value) => {
+        setPreferences(prev => ({
+            ...prev,
+            notifications: {
+                ...prev.notifications,
+                [category]: {
+                    ...prev.notifications[category],
+                    [key]: value
+                }
+            }
+        }));
+    };
+
+    if (settingsLoading) {
+        return (
+            <div className="container mx-auto py-10 px-6 max-w-5xl">
+                <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto py-10 px-6 max-w-5xl">
             <div className="flex flex-col gap-2 mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                <p className="text-muted-foreground italic">
-                    Manage your account settings, security preferences, and dashboard experience.
+                <h1 className="text-3xl font-bold tracking-tight">Developer Settings</h1>
+                <p className="text-muted-foreground">
+                    Manage your account, preferences, and developer experience.
                 </p>
             </div>
 
             <Tabs defaultValue="profile" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-[600px] h-auto p-1 bg-muted/50">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 lg:w-auto h-auto p-1 bg-muted/50">
                     <TabsTrigger value="profile" className="gap-2 py-2">
                         <User className="h-4 w-4" />
                         Profile
                     </TabsTrigger>
-                    <TabsTrigger value="appearance" className="gap-2 py-2">
-                        <Palette className="h-4 w-4" />
-                        Appearance
+                    <TabsTrigger value="organization" className="gap-2 py-2">
+                        <Building2 className="h-4 w-4" />
+                        Organization
                     </TabsTrigger>
-                    <TabsTrigger value="security" className="gap-2 py-2">
-                        <Shield className="h-4 w-4" />
-                        Security
+                    <TabsTrigger value="notifications" className="gap-2 py-2">
+                        <Bell className="h-4 w-4" />
+                        Notifications
+                    </TabsTrigger>
+                    <TabsTrigger value="api" className="gap-2 py-2">
+                        <Code className="h-4 w-4" />
+                        API & Security
                     </TabsTrigger>
                     <TabsTrigger value="advanced" className="gap-2 py-2">
-                        <Smartphone className="h-4 w-4" />
+                        <Zap className="h-4 w-4" />
                         Advanced
                     </TabsTrigger>
                 </TabsList>
 
+                {/* Profile Tab */}
                 <TabsContent value="profile" className="space-y-6">
-                    <Card className="border-none shadow-sm bg-card/50 backdrop-blur-sm">
+                    <Card>
                         <CardHeader>
                             <CardTitle>Public Profile</CardTitle>
                             <CardDescription>
-                                This information will be displayed on your developer profile and API interactions.
+                                This information will be displayed on your developer profile.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -129,9 +264,6 @@ const Settings = () => {
                                                 <UserCircle className="h-12 w-12 text-muted-foreground" />
                                             )}
                                         </div>
-                                        <button className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl text-white text-xs font-medium">
-                                            Change
-                                        </button>
                                     </div>
                                     <p className="text-[10px] text-muted-foreground text-center max-w-[100px]">
                                         JPG, GIF or PNG. 1MB Max.
@@ -150,9 +282,6 @@ const Settings = () => {
                                                 className="pl-10"
                                             />
                                         </div>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            This is your public display name. It can be your real name or a pseudonym.
-                                        </p>
                                     </div>
 
                                     <div className="grid gap-2">
@@ -167,118 +296,380 @@ const Settings = () => {
                                             />
                                         </div>
                                         <p className="text-[11px] text-muted-foreground">
-                                            Emails cannot be changed for social-linked accounts.
+                                            Email cannot be changed for OAuth accounts.
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </CardContent>
-                        <CardFooter className="border-t bg-muted/10 px-6 py-4 rounded-b-xl flex justify-between items-center">
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <AlertCircle className="h-3 w-3" />
-                                <span>Updates sync across all linked projects</span>
-                            </div>
+                        <CardFooter className="border-t bg-muted/10 px-6 py-4 flex justify-end">
                             <Button onClick={handleProfileUpdate} disabled={loading} className="gap-2">
                                 {loading ? "Saving..." : <><Save className="h-4 w-4" /> Save Changes</>}
                             </Button>
                         </CardFooter>
                     </Card>
-                </TabsContent>
 
-                <TabsContent value="appearance" className="space-y-6">
-                    <Card className="border-none shadow-sm bg-card/50">
+                    <Card>
                         <CardHeader>
-                            <CardTitle>Interface Customization</CardTitle>
-                            <CardDescription>
-                                Personalize how AuthSphere looks and feels on your device.
-                            </CardDescription>
+                            <CardTitle className="flex items-center gap-2">
+                                <Palette className="h-5 w-5 text-primary" />
+                                Appearance
+                            </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <h4 className="font-medium">Theme Mode</h4>
-                                    <p className="text-sm text-muted-foreground italic">
+                                    <p className="text-sm text-muted-foreground">
                                         Switch between light, dark, and system themes.
                                     </p>
                                 </div>
-                                <ModeToggle />
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <h4 className="font-medium italic">High Contrast Mode</h4>
-                                    <p className="text-sm text-muted-foreground italic">
-                                        Increase visibility of borders and text.
-                                    </p>
-                                </div>
-                                <Button variant="outline" size="sm" disabled>Coming Soon</Button>
+                                <AnimatedThemeToggler />
                             </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="security" className="space-y-6">
-                    <Card className="border-none shadow-sm bg-card/50">
+                {/* Organization Tab */}
+                <TabsContent value="organization" className="space-y-6">
+                    <Card>
                         <CardHeader>
-                            <CardTitle>Security & Authentication</CardTitle>
+                            <CardTitle>Organization Information</CardTitle>
                             <CardDescription>
-                                Manage how you access your account and protect your data.
+                                Add details about your company or team.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="organization">Organization Name</Label>
+                                <Input
+                                    id="organization"
+                                    placeholder="Acme Inc."
+                                    value={orgData.organization}
+                                    onChange={(e) => setOrgData({ ...orgData, organization: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="website">Website</Label>
+                                <Input
+                                    id="website"
+                                    type="url"
+                                    placeholder="https://acme.com"
+                                    value={orgData.website}
+                                    onChange={(e) => setOrgData({ ...orgData, website: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="bio">Bio</Label>
+                                <Textarea
+                                    id="bio"
+                                    placeholder="Tell us about yourself or your organization..."
+                                    value={orgData.bio}
+                                    onChange={(e) => setOrgData({ ...orgData, bio: e.target.value })}
+                                    rows={4}
+                                    maxLength={500}
+                                />
+                                <p className="text-xs text-muted-foreground text-right">
+                                    {orgData.bio.length}/500
+                                </p>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="border-t bg-muted/10 px-6 py-4 flex justify-end">
+                            <Button onClick={handleOrgUpdate} disabled={loading} className="gap-2">
+                                {loading ? "Saving..." : <><Save className="h-4 w-4" /> Save Organization</>}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                {/* Notifications Tab */}
+                <TabsContent value="notifications" className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Email Notifications</CardTitle>
+                            <CardDescription>
+                                Choose what updates you want to receive via email.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Project Updates</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Get notified when projects are created or modified.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.email.projectUpdates}
+                                    onCheckedChange={(val) => updateNotificationPref('email', 'projectUpdates', val)}
+                                />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Security Alerts</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Important security notifications and warnings.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.email.securityAlerts}
+                                    onCheckedChange={(val) => updateNotificationPref('email', 'securityAlerts', val)}
+                                />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Weekly Digest</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Summary of your week's activity and stats.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.email.weeklyDigest}
+                                    onCheckedChange={(val) => updateNotificationPref('email', 'weeklyDigest', val)}
+                                />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>New User Signups</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Get notified when users sign up to your projects.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.email.newUserSignups}
+                                    onCheckedChange={(val) => updateNotificationPref('email', 'newUserSignups', val)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>In-App Notifications</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Enable Notifications</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Show notifications in the dashboard.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.inApp.enabled}
+                                    onCheckedChange={(val) => updateNotificationPref('inApp', 'enabled', val)}
+                                />
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Sound Effects</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Play sound when receiving notifications.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.notifications.inApp.sound}
+                                    onCheckedChange={(val) => updateNotificationPref('inApp', 'sound', val)}
+                                />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="border-t bg-muted/10 px-6 py-4 flex justify-end">
+                            <Button onClick={handlePreferencesUpdate} disabled={loading} className="gap-2">
+                                {loading ? "Saving..." : <><Save className="h-4 w-4" /> Save Preferences</>}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                {/* API & Security Tab */}
+                <TabsContent value="api" className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>API Configuration</CardTitle>
+                            <CardDescription>
+                                Default settings for your API projects.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Default Rate Limit (requests/hour)</Label>
+                                <Input
+                                    type="number"
+                                    value={preferences.api.defaultRateLimit}
+                                    onChange={(e) => setPreferences({
+                                        ...preferences,
+                                        api: { ...preferences.api, defaultRateLimit: parseInt(e.target.value) }
+                                    })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Applied to new projects by default.
+                                </p>
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Enable CORS by Default</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Allow cross-origin requests for new projects.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.api.enableCors}
+                                    onCheckedChange={(val) => setPreferences({
+                                        ...preferences,
+                                        api: { ...preferences.api, enableCors: val }
+                                    })}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Dashboard Preferences</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Default View</Label>
+                                <Select
+                                    value={preferences.dashboard.defaultView}
+                                    onValueChange={(val) => setPreferences({
+                                        ...preferences,
+                                        dashboard: { ...preferences.dashboard, defaultView: val }
+                                    })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="grid">
+                                            <div className="flex items-center gap-2">
+                                                <LayoutGrid className="h-4 w-4" />
+                                                Grid View
+                                            </div>
+                                        </SelectItem>
+                                        <SelectItem value="list">
+                                            <div className="flex items-center gap-2">
+                                                <List className="h-4 w-4" />
+                                                List View
+                                            </div>
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Items Per Page</Label>
+                                <Select
+                                    value={preferences.dashboard.itemsPerPage.toString()}
+                                    onValueChange={(val) => setPreferences({
+                                        ...preferences,
+                                        dashboard: { ...preferences.dashboard, itemsPerPage: parseInt(val) }
+                                    })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="5">5</SelectItem>
+                                        <SelectItem value="10">10</SelectItem>
+                                        <SelectItem value="25">25</SelectItem>
+                                        <SelectItem value="50">50</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Show Analytics</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Display charts and metrics on dashboard.
+                                    </p>
+                                </div>
+                                <Switch
+                                    checked={preferences.dashboard.showAnalytics}
+                                    onCheckedChange={(val) => setPreferences({
+                                        ...preferences,
+                                        dashboard: { ...preferences.dashboard, showAnalytics: val }
+                                    })}
+                                />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="border-t bg-muted/10 px-6 py-4 flex justify-end">
+                            <Button onClick={handlePreferencesUpdate} disabled={loading} className="gap-2">
+                                {loading ? "Saving..." : <><Save className="h-4 w-4" /> Save Preferences</>}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Security</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <h4 className="font-medium">Active Sessions</h4>
                                     <p className="text-sm text-muted-foreground">
-                                        View and manage devices currently signed into your account.
+                                        View and manage devices signed into your account.
                                     </p>
                                 </div>
                                 <Button variant="outline" asChild>
                                     <Link to="/settings/sessions" className="gap-2">
-                                        Manage Sessions <Globe className="h-4 w-4" />
+                                        Manage <Globe className="h-4 w-4" />
                                     </Link>
                                 </Button>
-                            </div>
-                            <Separator />
-                            <div className="flex items-center justify-between opacity-50">
-                                <div className="space-y-1">
-                                    <h4 className="font-medium italic">Two-Factor Authentication (2FA)</h4>
-                                    <p className="text-sm text-muted-foreground italic">
-                                        Add an extra layer of security to your account.
-                                    </p>
-                                </div>
-                                <Badge variant="secondary">Enterprise Only</Badge>
                             </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
 
+                {/* Advanced Tab */}
                 <TabsContent value="advanced" className="space-y-6">
-                    <Card className="border-none shadow-sm bg-card/50">
+                    <Card className="border-destructive/20">
                         <CardHeader>
-                            <CardTitle>Advanced Options</CardTitle>
+                            <CardTitle className="text-destructive flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5" />
+                                Danger Zone
+                            </CardTitle>
                             <CardDescription>
-                                Sensitive account operations and developer-specific controls.
+                                Irreversible actions that permanently affect your account.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1 text-destructive">
-                                    <h4 className="font-bold flex items-center gap-2">
+                            <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
+                                <div className="space-y-1">
+                                    <h4 className="font-bold flex items-center gap-2 text-destructive">
                                         <Trash2 className="h-4 w-4" /> Delete Account
                                     </h4>
-                                    <p className="text-sm opacity-80 italic">
-                                        Permanently remove all projects, members, and personal data.
+                                    <p className="text-sm text-muted-foreground">
+                                        Permanently remove all projects, data, and settings.
                                     </p>
                                 </div>
                                 <Button
                                     variant="destructive"
-                                    size="sm"
-                                    className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-white border-destructive/20"
                                     onClick={handleDeleteAccount}
                                     disabled={loading}
                                 >
-                                    {loading ? "Processing..." : "Execute Deletion"}
+                                    {loading ? "Processing..." : "Delete Account"}
                                 </Button>
                             </div>
                         </CardContent>
@@ -288,10 +679,10 @@ const Settings = () => {
                         <CardContent className="p-6 flex items-start gap-4">
                             <AlertCircle className="h-6 w-6 text-primary shrink-0 mt-1" />
                             <div className="space-y-1">
-                                <h4 className="font-bold text-primary italic">Developer Compliance</h4>
-                                <p className="text-sm text-muted-foreground italic leading-relaxed">
-                                    Deleting your account will immediately revoke all API keys for your <b>{user?.username}</b> projects.
-                                    Any applications relying on AuthSphere for this account will stop working instantly.
+                                <h4 className="font-bold text-primary">Developer Compliance</h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Deleting your account will immediately revoke all API keys for your projects.
+                                    Any applications relying on AuthSphere will stop working instantly.
                                 </p>
                             </div>
                         </CardContent>

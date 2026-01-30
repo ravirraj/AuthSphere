@@ -123,7 +123,7 @@ export const updateProject = async (req, res) => {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    const allowedUpdates = ["name", "settings", "redirectUris", "providers"]; // prevent modifying keys manually
+    const allowedUpdates = ["name", "settings", "redirectUris", "providers", "allowedOrigins", "logoUrl"]; // prevent modifying keys manually
     const updates = {};
 
     for (const key of allowedUpdates) {
@@ -281,6 +281,54 @@ export const getProjectUsers = async (req, res) => {
     });
   } catch (err) {
     console.error("Get Project Users Error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* ============================================================
+   GET CONFIGURED PROVIDERS (INTERNAL CONFIG CHECK)
+   Checks which .env variables are set for OAuth providers.
+   Returns detailed status for each provider.
+============================================================ */
+export const getConfiguredProviders = async (req, res) => {
+  try {
+    // Helper function to create provider status object
+    const getProviderStatus = (clientId, clientSecret) => {
+      const isConfigured = !!(clientId && clientSecret);
+      return {
+        isConfigured,
+        status: isConfigured ? "ready" : "not_configured",
+        message: isConfigured
+          ? "Ready to integrate"
+          : "Not yet configured. Add credentials to enable this provider."
+      };
+    };
+
+    const providers = {
+      google: getProviderStatus(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET),
+      github: getProviderStatus(process.env.GITHUB_CLIENT_ID, process.env.GITHUB_CLIENT_SECRET),
+      discord: getProviderStatus(process.env.DISCORD_CLIENT_ID, process.env.DISCORD_CLIENT_SECRET),
+      gitlab: getProviderStatus(process.env.GITLAB_CLIENT_ID, process.env.GITLAB_CLIENT_SECRET),
+      twitch: getProviderStatus(process.env.TWITCH_CLIENT_ID, process.env.TWITCH_CLIENT_SECRET),
+      microsoft: getProviderStatus(process.env.MICROSOFT_CLIENT_ID, process.env.MICROSOFT_CLIENT_SECRET),
+      facebook: getProviderStatus(process.env.FACEBOOK_CLIENT_ID, process.env.FACEBOOK_CLIENT_SECRET),
+      twitter: getProviderStatus(process.env.TWITTER_CLIENT_ID, process.env.TWITTER_CLIENT_SECRET),
+      slack: getProviderStatus(process.env.SLACK_CLIENT_ID, process.env.SLACK_CLIENT_SECRET),
+      apple: getProviderStatus(process.env.APPLE_CLIENT_ID, process.env.APPLE_CLIENT_SECRET),
+      spotify: getProviderStatus(process.env.SPOTIFY_CLIENT_ID, process.env.SPOTIFY_CLIENT_SECRET),
+      reddit: getProviderStatus(process.env.REDDIT_CLIENT_ID, process.env.REDDIT_CLIENT_SECRET),
+      linkedin: getProviderStatus(process.env.LINKEDIN_CLIENT_ID, process.env.LINKEDIN_CLIENT_SECRET),
+      hubspot: getProviderStatus(process.env.HUBSPOT_CLIENT_ID, process.env.HUBSPOT_CLIENT_SECRET),
+      instagram: getProviderStatus(process.env.INSTAGRAM_CLIENT_ID, process.env.INSTAGRAM_CLIENT_SECRET),
+      pinterest: getProviderStatus(process.env.PINTEREST_CLIENT_ID, process.env.PINTEREST_CLIENT_SECRET),
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: providers,
+    });
+  } catch (err) {
+    console.error("Get Configured Providers Error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

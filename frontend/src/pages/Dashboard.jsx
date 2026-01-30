@@ -43,6 +43,7 @@ import {
 import { getDashboardStats } from "@/api/DeveloperAPI";
 import CreateProjectModal from "@/components/project/CreateProjectModal";
 import { format, formatDistanceToNow } from "date-fns";
+import { ShineBorder } from "@/components/ui/shine-border";
 
 const Dashboard = () => {
   const { user, loading } = useContext(AuthContext);
@@ -427,7 +428,7 @@ const Dashboard = () => {
         <CreateProjectModal
           open={createOpen}
           onClose={() => setCreateOpen(false)}
-          onCreated={() => {
+          onCreated={(project) => {
             setCreateOpen(false);
             fetchStats();
             setActiveTab('projects');
