@@ -87,8 +87,8 @@ const ProvidersPage = () => {
         );
     }, [searchQuery]);
 
-    const activeProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && backendConfig[p.id]);
-    const setupProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && !backendConfig[p.id]);
+    const activeProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && backendConfig[p.id]?.isConfigured);
+    const setupProviders = filteredProviders.filter(p => p.status !== 'coming_soon' && !backendConfig[p.id]?.isConfigured);
     const upcomingProviders = filteredProviders.filter(p => p.status === 'coming_soon');
 
     const toggleProvider = (id) => {
@@ -188,6 +188,7 @@ const ProvidersPage = () => {
                                     p={p}
                                     isSelected={selectedProviders[p.id]}
                                     isConfigured={true}
+                                    backendMessage={backendConfig[p.id]?.message}
                                     onToggle={toggleProvider}
                                     onViewDocs={setSelectedSpec}
                                 />
@@ -220,6 +221,7 @@ const ProvidersPage = () => {
                                 p={p}
                                 isSelected={selectedProviders[p.id]}
                                 isConfigured={false}
+                                backendMessage={backendConfig[p.id]?.message}
                                 onToggle={toggleProvider}
                                 onViewDocs={setSelectedSpec}
                             />
@@ -369,7 +371,7 @@ const ProvidersPage = () => {
     );
 };
 
-const ProviderSmallCard = ({ p, isSelected, isConfigured, onToggle, onViewDocs, isUpcoming }) => {
+const ProviderSmallCard = ({ p, isSelected, isConfigured, backendMessage, onToggle, onViewDocs, isUpcoming }) => {
     return (
         <Card
             className={`
@@ -381,7 +383,9 @@ const ProviderSmallCard = ({ p, isSelected, isConfigured, onToggle, onViewDocs, 
             onClick={() => {
                 if (isUpcoming) return;
                 if (!isConfigured && !isSelected) {
-                    toast.error(`Missing configuration for ${p.name}`, { description: "Please add the required Client ID/Secret to your backend .env file first." });
+                    toast.error(`${p.name} - Configuration Required`, {
+                        description: backendMessage || "Please add the required Client ID/Secret to your backend .env file first."
+                    });
                     return;
                 }
                 onToggle(p.id);
@@ -404,7 +408,9 @@ const ProviderSmallCard = ({ p, isSelected, isConfigured, onToggle, onViewDocs, 
                                     checked={isSelected}
                                     onCheckedChange={() => {
                                         if (!isConfigured && !isSelected) {
-                                            toast.error(`Missing configuration for ${p.name}`);
+                                            toast.error(`${p.name} - Configuration Required`, {
+                                                description: backendMessage || "Please add the required Client ID/Secret to your backend .env file first."
+                                            });
                                             return;
                                         }
                                         onToggle(p.id)
