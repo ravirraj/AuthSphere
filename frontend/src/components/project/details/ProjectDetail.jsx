@@ -87,19 +87,15 @@ const ProjectDetail = () => {
 
   /* MAIN RENDER */
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="max-w-7xl mx-auto space-y-10 pb-20 animate-in fade-in duration-500">
 
       {/* Header */}
       <ProjectDetailHeader project={project} />
 
-      <div className="space-y-8">
+      <div className="space-y-10">
 
         {/* API Keys */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold text-muted-foreground">API Credentials</h3>
-            <Separator className="flex-1" />
-          </div>
+        <section>
           <ProjectKeysCard
             project={project}
             onKeysRotated={loadProject}
@@ -107,27 +103,17 @@ const ProjectDetail = () => {
         </section>
 
         {/* Users */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold text-muted-foreground">Users</h3>
-            <Separator className="flex-1" />
-          </div>
+        <section>
           <ProjectUsersCard projectId={projectId} />
         </section>
 
         {/* Settings */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold text-muted-foreground">Settings</h3>
-            <Separator className="flex-1" />
-          </div>
+        <section>
           <ProjectSettings
             project={project}
             onUpdated={loadProject}
           />
         </section>
-
-
 
       </div>
     </div>
