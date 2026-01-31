@@ -6,6 +6,7 @@ import { initAuth } from "./config/options";
 import { getToken, getUser, isAuthenticated, logout } from "./client/session";
 import { fetchWithAuth } from "./client/api";
 import { AuthError } from "./utils/errors";
+import { register, loginLocal, verifyOTP, resendVerification } from "./client/local";
 
 // =======================
 // Config
@@ -17,6 +18,7 @@ export { initAuth } from "./config/options";
 // =======================
 export { redirectToLogin } from "./client/redirect";
 export { handleAuthCallback } from "./client/callback";
+export { register, loginLocal, verifyOTP, resendVerification } from "./client/local";
 
 // =======================
 // Session
@@ -61,6 +63,10 @@ const AuthSphere = {
   getToken,
   fetchWithAuth,
   AuthError,
+  register,
+  loginLocal,
+  verifyOTP,
+  resendVerification,
 };
 
 export default AuthSphere;

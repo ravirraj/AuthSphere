@@ -194,6 +194,7 @@ const handleSDKFlow = async (res, req, userData, explicitSdkRequestId) => {
         picture: userData.picture || "",
         provider: userData.provider || "local",
         providerId: userData.providerId || "",
+        isVerified: true,
       });
       console.log("✨ EndUser created:", endUser._id);
 

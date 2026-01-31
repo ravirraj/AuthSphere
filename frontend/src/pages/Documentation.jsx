@@ -10,7 +10,7 @@ import {
   Menu, X, Terminal, Github, RefreshCcw, ExternalLink,
   ArrowLeft, Layers, AlertCircle, Code2, Cpu, Globe, Lock,
   FileJson, TerminalSquare, Info,
-  ChevronDown, Settings2, BarChart3
+  ChevronDown, Settings2, BarChart3, User, KeyRound
 } from "lucide-react";
 import { AuthContext } from "@/context/AuthContext";
 import { getProjects } from "@/api/ProjectAPI";
@@ -63,8 +63,10 @@ const Docs = () => {
   const sections = [
     { id: "introduction", title: "Introduction", icon: BookOpen },
     { id: "quick-start", title: "Quick Start", icon: Zap },
-    { id: "frameworks", title: "Frameworks", icon: Layers },
-    { id: "authentication", title: "Authentication", icon: ShieldCheck },
+    { id: "local-auth", title: "Local Authentication", icon: User },
+    { id: "authentication", title: "Social Login", icon: Globe },
+    { id: "frameworks", title: "Framework Integration", icon: Layers },
+    { id: "session-management", title: "Session Management", icon: KeyRound },
     { id: "configuration", title: "Configuration", icon: Settings2 },
     { id: "api-reference", title: "API Reference", icon: FileJson },
     { id: "security", title: "Security", icon: Lock },
@@ -275,7 +277,7 @@ const Docs = () => {
                   <p className="text-muted-foreground mb-4">Initialize the client with your Public Key (Client ID).</p>
                   <CodeBlock
                     id="init"
-                    code={`import { AuthSphere } from '@authspherejs/sdk'\n\n// Initialize inside your app entry point\nAuthSphere.init({\n  publicKey: '${publicKey}',\n})`}
+                    code={`import { AuthSphere } from '@authspherejs/sdk'\n\n// Initialize inside your app entry point\nAuthSphere.initAuth({\n  publicKey: '${publicKey}',\n})`}
                     language="javascript"
                   />
                 </div>
@@ -320,27 +322,119 @@ const Docs = () => {
             </article>
           )}
 
-          {/* AUTHENTICATION */}
+          {/* SESSION MANAGEMENT */}
+          {activeSection === "session-management" && (
+            <article className="space-y-8 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tight">Session Management</h1>
+                <p className="text-lg text-muted-foreground">
+                  Manage user sessions, tokens, and profiles locally within your app.
+                </p>
+              </div>
+
+              <div className="space-y-12">
+                <div>
+                  <h3 className="text-xl font-bold mb-3">Check Authentication</h3>
+                  <p className="text-muted-foreground mb-4">Check if a valid session exists on the client.</p>
+                  <CodeBlock
+                    id="is-authenticated"
+                    code={`const isLoggedIn = AuthSphere.isAuthenticated();\n\nif (!isLoggedIn) {\n  navigate('/login');\n}`}
+                    language="javascript"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold mb-3">Get User Profile</h3>
+                  <p className="text-muted-foreground mb-4">Retrieve the currently logged-in user's details.</p>
+                  <CodeBlock
+                    id="get-user"
+                    code={`const user = AuthSphere.getUser();\n\nconsole.log(user.email);\nconsole.log(user.username);\nconsole.log(user.picture);`}
+                    language="javascript"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold mb-3">Logout</h3>
+                  <p className="text-muted-foreground mb-4">Clear all local session data and tokens.</p>
+                  <CodeBlock
+                    id="logout"
+                    code={`AuthSphere.logout();\nwindow.location.href = '/login';`}
+                    language="javascript"
+                  />
+                </div>
+              </div>
+            </article>
+          )}
+
+          {/* LOCAL AUTHENTICATION */}
+          {activeSection === "local-auth" && (
+            <article className="space-y-8 animate-in fade-in duration-500">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tight">Local Authentication</h1>
+                <p className="text-lg text-muted-foreground">
+                  Secure email/password authentication with built-in OTP verification.
+                </p>
+              </div>
+
+              <div className="space-y-12">
+                <div>
+                  <h3 className="text-xl font-bold mb-3">User Registration</h3>
+                  <p className="text-muted-foreground mb-4">Register new users with their email, password, and optional profile data.</p>
+                  <CodeBlock
+                    id="register"
+                    code={`await AuthSphere.register({\n  email: 'user@example.com',\n  password: 'securePassword123',\n  username: 'John Doe'\n});`}
+                    language="javascript"
+                  />
+                  <div className="text-sm text-muted-foreground bg-blue-500/10 border border-blue-500/20 p-4 rounded-lg flex gap-3">
+                    <Info className="h-5 w-5 text-blue-500 shrink-0" />
+                    <p>After registration, an OTP is automatically sent to the user's email for verification.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold mb-3">Login Flow</h3>
+                  <p className="text-muted-foreground mb-4">Authenticate users locally. If their email isn't verified, the SDK will return a specific error allowing you to redirect them to the verification page.</p>
+                  <CodeBlock
+                    id="login-local"
+                    code={`try {\n  await AuthSphere.loginLocal({\n    email: 'user@example.com',\n    password: 'securePassword123'\n  });\n} catch (err) {\n  if (err.message.includes('not verified')) {\n    // Redirect to OTP entry page with the sdk_request ID\n    const sdkRequest = err.sdk_request;\n    navigate(\`/verify-otp?email=\${email}&sdk_request=\${sdkRequest}\`);\n  }\n}`}
+                    language="javascript"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold mb-3">OTP Verification</h3>
+                  <p className="text-muted-foreground mb-4">Verify the user's email address using the 6-digit code sent to them.</p>
+                  <CodeBlock
+                    id="verify-otp"
+                    code={`await AuthSphere.verifyOTP({\n  email: 'user@example.com',\n  otp: '123456',\n  sdk_request: 'REQ_ID' // Optional: for auto-login after verification\n});`}
+                    language="javascript"
+                  />
+                </div>
+              </div>
+            </article>
+          )}
+
+          {/* SOCIAL LOGIN */}
           {activeSection === "authentication" && (
             <article className="space-y-8 animate-in fade-in duration-500">
-              <h1 className="text-4xl font-bold tracking-tight">Authentication Flows</h1>
+              <h1 className="text-4xl font-bold tracking-tight">Social Login</h1>
               <p className="text-lg text-muted-foreground">
-                AuthSphere manages the complexity of OAuth 2.0 and OIDC protocols.
+                AuthSphere manages the complexity of OAuth 2.0 and OIDC protocols for third-party providers.
               </p>
 
               <section className="space-y-4">
-                <h2 className="text-2xl font-bold">Social Login</h2>
+                <h2 className="text-2xl font-bold">One-Click Authentication</h2>
                 <p className="text-muted-foreground">
                   Triggering a login redirects the user to the provider's consent screen. After approval,
                   they are returned to your <code>redirectUri</code> with a session established.
                 </p>
                 <CodeBlock
                   id="auth-flow"
-                  code={`// Basic Login\nawait AuthSphere.loginWith('google');\n\n// Login with specific scopes\nawait AuthSphere.loginWith('github', {\n  scopes: ['repo', 'user:email']\n});`}
+                  code={`// Basic Social Login (google, github, discord, microsoft)\nAuthSphere.redirectToLogin('google');`}
                   language="javascript"
                 />
                 <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">
-                  <strong>Note:</strong> Make sure "Google" or "GitHub" is enabled in your <Link to={`/projects/${projectId}/settings`} className="underline hover:text-foreground">Project Providers</Link> settings.
+                  <strong>Note:</strong> Social logins automatically verify the user's email if the provider confirms it.
                 </div>
               </section>
             </article>
