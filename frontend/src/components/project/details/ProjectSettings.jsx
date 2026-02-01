@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Save, Settings, Plus, Trash2, Globe, ShieldCheck, Lock, AlertTriangle, Clock } from "lucide-react";
+import { Save, Settings, Plus, Trash2, Globe, ShieldCheck, Lock, AlertTriangle, Clock, Mail } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -71,7 +71,19 @@ const ProjectSettings = ({ project, onUpdated }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmName, setConfirmName] = useState("");
 
-  const displayProviders = allProvidersList.filter(p => p.status === 'ready').slice(0, 6);
+  // Filter providers
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const relevantProviders = useMemo(() => {
+    return allProvidersList.filter(p =>
+      ['ready', 'available', 'beta'].includes(p.status) &&
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
+  const enabledProvidersList = relevantProviders.filter(p => providers[p.id]);
+  const disabledProvidersList = relevantProviders.filter(p => !providers[p.id]);
 
   // --- CHANGE DETECTION ---
   const hasChanges = useMemo(() => {
@@ -304,6 +316,26 @@ const ProjectSettings = ({ project, onUpdated }) => {
             </div>
           </div>
 
+          {requireEmail && (
+            <div className="flex items-center justify-between p-4 border border-primary/20 bg-primary/5 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Email Verification is Active</h4>
+                  <p className="text-xs text-muted-foreground">Customize branding, logo, and colors for emails.</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to={`/projects/${project._id}/email-customization`}>
+                  <Settings className="h-4 w-4" />
+                  Customize Email
+                </Link>
+              </Button>
+            </div>
+          )}
+
           <Separator />
 
           <div className="space-y-4">
@@ -353,29 +385,71 @@ const ProjectSettings = ({ project, onUpdated }) => {
 
       {/* 4. Active Providers */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            Active Providers
-          </CardTitle>
-          <CardDescription>
-            Select which identity providers are enabled for this project.
-          </CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 space-y-0 pb-6">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              Active Providers
+            </CardTitle>
+            <CardDescription>
+              Select which identity providers are enabled for this project.
+            </CardDescription>
+          </div>
+          <div className="w-full sm:max-w-xs">
+            <Input
+              placeholder="Search providers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {displayProviders.map((p) => {
-              const isEnabled = providers[p.id];
-              return (
+
+          {/* Enabled Providers Section */}
+          {enabledProvidersList.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Enabled</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {enabledProvidersList.map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => toggleProvider(p.id)}
+                    className="flex items-center gap-3 p-3 border rounded-xl transition-all duration-200 cursor-pointer bg-primary/5 border-primary shadow-sm"
+                  >
+                    <div className="h-10 w-10 shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center ring-2 ring-primary/20">
+                      <img
+                        src={p.logo}
+                        alt={p.name}
+                        className="h-full w-full object-contain"
+                        onError={(e) => { e.target.src = "https://www.svgrepo.com/show/506680/app-development.svg" }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{p.name}</p>
+                      <p className="text-[10px] font-bold text-primary">Enabled</p>
+                    </div>
+                    <Switch
+                      checked={true}
+                      onCheckedChange={() => toggleProvider(p.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Available Providers Section */}
+          <div>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Available Catalog</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {disabledProvidersList.slice(0, searchTerm ? undefined : (showAll ? undefined : 20)).map((p) => (
                 <div
                   key={p.id}
                   onClick={() => toggleProvider(p.id)}
-                  className={`
-                    flex items-center gap-3 p-3 border rounded-xl transition-all duration-200 cursor-pointer
-                    ${isEnabled ? "bg-primary/5 border-primary shadow-sm" : "bg-card hover:bg-muted/50"}
-                  `}
+                  className="flex items-center gap-3 p-3 border rounded-xl transition-all duration-200 cursor-pointer bg-card hover:bg-muted/50"
                 >
-                  <div className={`h-10 w-10 shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center ${isEnabled ? "ring-2 ring-primary/20" : ""}`}>
+                  <div className="h-10 w-10 shrink-0 bg-white rounded-lg border p-2 flex items-center justify-center">
                     <img
                       src={p.logo}
                       alt={p.name}
@@ -385,18 +459,35 @@ const ProjectSettings = ({ project, onUpdated }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.name}</p>
-                    <p className={`text-[10px] font-bold ${isEnabled ? "text-primary" : "text-muted-foreground"}`}>
-                      {isEnabled ? "Enabled" : "Available"}
-                    </p>
+                    <p className="text-[10px] font-bold text-muted-foreground">Available</p>
                   </div>
                   <Switch
-                    checked={isEnabled}
+                    checked={false}
                     onCheckedChange={() => toggleProvider(p.id)}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-              );
-            })}
+              ))}
+              {disabledProvidersList.length === 0 && (
+                <div className="text-sm text-muted-foreground col-span-full py-4 text-center border border-dashed rounded-lg">
+                  No providers found matching "{searchTerm}"
+                </div>
+              )}
+            </div>
+
+            {/* Show More Button */}
+            {!searchTerm && disabledProvidersList.length > 20 && (
+              <div className="mt-4 text-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAll(!showAll)}
+                  className="gap-2"
+                >
+                  {showAll ? "Show Less" : `Show All (${disabledProvidersList.length})`}
+                </Button>
+              </div>
+            )}
           </div>
           <div className="mt-4 text-center">
             <Button variant="link" asChild className="text-primary">
@@ -408,7 +499,7 @@ const ProjectSettings = ({ project, onUpdated }) => {
 
       {/* Action Bar */}
       <div className="sticky bottom-4 z-10 flex justify-end">
-        <Card className="shadow-2xl border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <Card className="shadow-2xl border-primary/20 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
           <CardContent className="p-3 flex items-center gap-4">
             <div className="text-sm text-muted-foreground">
               {hasChanges ? "You have unsaved changes" : "All systems normal"}

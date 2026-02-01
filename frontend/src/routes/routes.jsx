@@ -1,20 +1,24 @@
 import { Navigate } from "react-router-dom";
 
-import Home from "@/pages/Home";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register"; // ADD THIS
-import Dashboard from "@/pages/Dashboard";
-import Documentation from "@/pages/Documentation";
+import Home from "@/pages/public/Home";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import Documentation from "@/pages/public/Documentation";
 
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
-import ProjectDetailPage from "@/pages/ProjectDetailPage";
-import ProjectAnalytics from "@/pages/ProjectAnalytics";
-import SessionManagement from "@/pages/SessionManagement";
-import Pricing from "@/pages/Pricing";
-import Settings from "@/pages/Settings";
-import AuditLogs from "@/pages/AuditLogs";
-import ProvidersPage from "@/pages/ProvidersPage";
+import ProjectDetailPage from "@/pages/project/ProjectDetailPage";
+import ProjectAnalytics from "@/pages/project/ProjectAnalytics";
+import SessionManagement from "@/pages/dashboard/SessionManagement";
+import Pricing from "@/pages/public/Pricing";
+import Settings from "@/pages/dashboard/Settings";
+import AuditLogs from "@/pages/dashboard/AuditLogs";
+import ProvidersPage from "@/pages/project/ProvidersPage";
+import ProjectUsers from "@/pages/project/ProjectUsers";
+
+import TemplatesPage from "@/pages/public/TemplatesPage";
+import EmailCustomizationPage from "@/pages/project/EmailCustomizationPage";
 
 export const routes = [
   {
@@ -22,6 +26,14 @@ export const routes = [
     element: (
       <MainLayout>
         <Home />
+      </MainLayout>
+    ),
+  },
+  {
+    path: "/templates",
+    element: (
+      <MainLayout>
+        <TemplatesPage />
       </MainLayout>
     ),
   },
@@ -88,11 +100,31 @@ export const routes = [
     ),
   },
   {
+    path: "/projects/:projectId/users",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <ProjectUsers />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/projects/:projectId/providers",
     element: (
       <ProtectedRoute>
         <MainLayout>
           <ProvidersPage />
+        </MainLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/projects/:projectId/email-customization",
+    element: (
+      <ProtectedRoute>
+        <MainLayout>
+          <EmailCustomizationPage />
         </MainLayout>
       </ProtectedRoute>
     ),
