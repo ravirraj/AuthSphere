@@ -6,7 +6,7 @@ import { ChevronDown, Github, X, Menu } from "lucide-react";
 const DocsHeader = ({ sections, activeSection, isSidebarOpen, setIsSidebarOpen }) => {
     return (
         <div className="sticky top-16 z-40 border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <div className="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
+            <div className="w-[90vw] mx-auto px-6 h-12 flex items-center justify-between">
                 <div className="flex items-center gap-2 overflow-hidden">
                     <Link to="/" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
                         AuthSphere

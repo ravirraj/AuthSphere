@@ -90,7 +90,7 @@ const Documentation = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className="max-w-7xl mx-auto flex">
+      <div className="w-[90vw] mx-auto flex">
         <DocsSidebar
           sections={sections}
           activeSection={activeSection}
@@ -98,7 +98,7 @@ const Documentation = () => {
           isOpen={isSidebarOpen}
         />
 
-        <main className="flex-1 px-6 md:px-12 py-12 max-w-4xl min-w-0">
+        <main className="flex-1 px-6 md:px-12 py-12 min-w-0">
           <DocsProjectSelector
             user={user}
             projects={projects}
