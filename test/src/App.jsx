@@ -141,7 +141,14 @@ const VerifyOTP = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await AuthSphere.verifyOTP({ email, otp: otp.join(''), sdk_request: sdkReq });
+      const res = await AuthSphere.verifyOTP({ email, otp: otp.join(''), sdk_request: sdkReq });
+
+      // If the backend returned a redirect URL (typical for cross-origin OAuth flows)
+      if (res && res.redirect) {
+        window.location.href = res.redirect;
+        return;
+      }
+
       if (!sdkReq) navigate('/login'); else navigate('/dashboard');
     } catch (err) {
       setError(err.message);

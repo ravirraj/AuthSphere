@@ -168,8 +168,9 @@ const handleSDKFlow = async (res, req, userData, explicitSdkRequestId) => {
 
     // ---------- FIND OR CREATE END USER ----------
     console.log("🔍 Looking for EndUser...");
+    const normalizedEmail = userData.email.toLowerCase().trim();
     let endUser = await EndUser.findOne({
-      email: userData.email,
+      email: normalizedEmail,
       projectId: authRequest.projectId,
     });
 

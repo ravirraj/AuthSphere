@@ -174,11 +174,19 @@ export const handleSDKCallback = async (req, res, endUser, provider, manualSdkRe
         // Send verification email
         await sendVerificationOTP(endUser.email, otp, project.name);
 
-        // If not verified, redirect to OTP entry page in the test app/frontend
+        // If not verified, return redirect info or redirect directly
         const redirectUrl = new URL(authRequest.redirectUri);
         redirectUrl.searchParams.set("error", "email_not_verified");
         redirectUrl.searchParams.set("email", endUser.email);
         redirectUrl.searchParams.set("sdk_request", sdk_request); // Pass sdk_request to frontend to verify later
+
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+          return res.json({
+            success: false,
+            message: "Email not verified",
+            redirect: redirectUrl.toString()
+          });
+        }
         return res.redirect(redirectUrl.toString());
       }
     }
@@ -200,7 +208,16 @@ export const handleSDKCallback = async (req, res, endUser, provider, manualSdkRe
     redirectUrl.searchParams.set("code", code);
     redirectUrl.searchParams.set("state", authRequest.state);
 
-    console.log("➡️ Redirecting to client:", redirectUrl.toString());
+    console.log("➡️ Returning redirect URL to client:", redirectUrl.toString());
+
+    // Check if this is an AJAX/Fetch request (typical for verifyOTP)
+    if (req.xhr || req.headers.accept?.includes('application/json') || req.body?.sdk_request) {
+      return res.json({
+        success: true,
+        redirect: redirectUrl.toString()
+      });
+    }
+
     return res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("SDK callback error:", err);
@@ -434,18 +451,21 @@ export const refresh = async (req, res) => {
  */
 export const registerLocal = async (req, res) => {
   try {
-    const { email, password, username, public_key, sdk_request } = req.body;
+    const { email, password, username, public_key, publicKey, sdk_request } = req.body;
+    const actualPublicKey = public_key || publicKey;
 
-    if (!email || !password || !username || !public_key) {
+    if (!email || !password || !username || !actualPublicKey) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const project = await Project.findOne({ publicKey: public_key, status: "active" });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const project = await Project.findOne({ publicKey: actualPublicKey, status: "active" });
     if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    const existingUser = await EndUser.findOne({ email, projectId: project._id });
+    const existingUser = await EndUser.findOne({ email: normalizedEmail, projectId: project._id });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
@@ -454,7 +474,7 @@ export const registerLocal = async (req, res) => {
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const user = await EndUser.create({
-      email,
+      email: normalizedEmail,
       password, // Hashed via pre-save hook
       username,
       projectId: project._id,
@@ -492,18 +512,21 @@ export const registerLocal = async (req, res) => {
  */
 export const loginLocal = async (req, res) => {
   try {
-    const { email, password, public_key, sdk_request } = req.body;
+    const { email, password, public_key, publicKey, sdk_request } = req.body;
+    const actualPublicKey = public_key || publicKey;
 
-    if (!email || !password || !public_key || !sdk_request) {
+    if (!email || !password || !actualPublicKey || !sdk_request) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const project = await Project.findOne({ publicKey: public_key, status: "active" });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const project = await Project.findOne({ publicKey: actualPublicKey, status: "active" });
     if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    const user = await EndUser.findOne({ email, projectId: project._id }).select("+password");
+    const user = await EndUser.findOne({ email: normalizedEmail, projectId: project._id }).select("+password");
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
@@ -547,19 +570,23 @@ export const loginLocal = async (req, res) => {
  */
 export const verifyOTP = async (req, res) => {
   try {
-    const { email, otp, public_key, sdk_request } = req.body;
+    const { email, otp, public_key, publicKey, sdk_request } = req.body;
+    const actualPublicKey = public_key || publicKey;
 
-    if (!email || !otp || !public_key) {
+    if (!email || !otp || !actualPublicKey) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const project = await Project.findOne({ publicKey: public_key, status: "active" });
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedOTP = otp.toString().trim();
+
+    const project = await Project.findOne({ publicKey: actualPublicKey, status: "active" });
     if (!project) return res.status(404).json({ success: false, message: "Project not found" });
 
     const user = await EndUser.findOne({
-      email,
+      email: normalizedEmail,
       projectId: project._id,
-      verificationOTP: otp,
+      verificationOTP: normalizedOTP,
       verificationOTPExpiry: { $gt: new Date() },
     });
 
@@ -583,6 +610,8 @@ export const verifyOTP = async (req, res) => {
     // If sdk_request is present, we should automatically log them in
     if (sdk_request) {
       console.log("✓ OTP Verified, proceeding to SDK Callback for automatic login.");
+      // Note: handleSDKCallback will now return a JSON with { redirect: '...' } 
+      // which the frontend fetch will receive and should navigate to.
       return await handleSDKCallback(req, res, user, "local", sdk_request);
     }
 
@@ -601,18 +630,21 @@ export const verifyOTP = async (req, res) => {
  */
 export const resendVerification = async (req, res) => {
   try {
-    const { email, public_key } = req.body;
+    const { email, public_key, publicKey } = req.body;
+    const actualPublicKey = public_key || publicKey;
 
-    if (!email || !public_key) {
+    if (!email || !actualPublicKey) {
       return res.status(400).json({ success: false, message: "Missing email or public key" });
     }
 
-    const project = await Project.findOne({ publicKey: public_key, status: "active" });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const project = await Project.findOne({ publicKey: actualPublicKey, status: "active" });
     if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    const user = await EndUser.findOne({ email, projectId: project._id });
+    const user = await EndUser.findOne({ email: normalizedEmail, projectId: project._id });
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
