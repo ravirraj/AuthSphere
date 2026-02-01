@@ -1,10 +1,10 @@
 <div align="center">
   
   <img 
-  src="frontend/public/assets/logo.png" 
+  src="assets/Gemini_Generated_Image_swlzriswlzriswlz.png" 
   alt="AuthSphere Logo" 
   width="120" 
-  style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); filter: brightness(0) invert(1);" 
+  style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1), transform: scale(3.5);" 
 />
 
 # AuthSphere
