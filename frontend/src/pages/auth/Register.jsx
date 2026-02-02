@@ -1,6 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AuthContext } from '@/context/AuthContext';
+import useAuthStore from '@/store/authStore';
 import api from '@/api/axios';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ import VantaBackground from "@/components/ui/VantaBackground";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useAuthStore();
 
   const [formData, setFormData] = useState({
     email: '',
