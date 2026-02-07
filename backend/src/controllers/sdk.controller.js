@@ -7,6 +7,7 @@ import { conf } from "../configs/env.js";
 import bcrypt from "bcryptjs";
 import { sendVerificationOTP } from "../services/email.service.js";
 import { logEvent } from "../utils/auditLogger.js";
+import { triggerWebhook } from "../utils/webhookSender.js";
 
 export const authRequests = new Map(); // sdk_request_id
 export const authCodes = new Map(); // authorization_code
@@ -381,12 +382,10 @@ export const token = async (req, res) => {
     const origin = req.headers.origin;
     if (project.allowedOrigins && project.allowedOrigins.length > 0) {
       if (!origin || !project.allowedOrigins.includes(origin)) {
-        return res
-          .status(403)
-          .json({
-            error: "access_denied",
-            error_description: "CORS: Origin not allowed",
-          });
+        return res.status(403).json({
+          error: "access_denied",
+          error_description: "CORS: Origin not allowed",
+        });
       }
     }
 
@@ -422,6 +421,16 @@ export const token = async (req, res) => {
       { expiresIn: accessSeconds }, // Use project setting
     );
 
+    // Trigger Webhook
+    triggerWebhook(projectId, "user.login", {
+      userId: endUser._id,
+      email: endUser.email,
+      username: endUser.username,
+      provider: endUser.provider || "local",
+      ip: req.ip,
+      timestamp: new Date().toISOString(),
+    });
+
     // Prepare response matching AuthResponse interface in SDK
     return res.json({
       success: true,
@@ -451,12 +460,10 @@ export const refresh = async (req, res) => {
     const { refreshToken, publicKey } = req.body;
 
     if (!refreshToken) {
-      return res
-        .status(400)
-        .json({
-          error: "invalid_request",
-          error_description: "Missing refresh token",
-        });
+      return res.status(400).json({
+        error: "invalid_request",
+        error_description: "Missing refresh token",
+      });
     }
 
     const session = await Session.findOne({
@@ -486,12 +493,10 @@ export const refresh = async (req, res) => {
     const origin = req.headers.origin;
     if (project.allowedOrigins && project.allowedOrigins.length > 0) {
       if (!origin || !project.allowedOrigins.includes(origin)) {
-        return res
-          .status(403)
-          .json({
-            error: "access_denied",
-            error_description: "CORS: Origin not allowed",
-          });
+        return res.status(403).json({
+          error: "access_denied",
+          error_description: "CORS: Origin not allowed",
+        });
       }
     }
 
@@ -608,6 +613,15 @@ export const registerLocal = async (req, res) => {
         userAgent: req.headers["user-agent"],
         resourceId: user._id,
       },
+    });
+
+    // Trigger Webhook
+    triggerWebhook(project._id, "user.registered", {
+      userId: user._id,
+      email: user.email,
+      username: user.username,
+      provider: "local",
+      timestamp: new Date().toISOString(),
     });
 
     return res.status(201).json({

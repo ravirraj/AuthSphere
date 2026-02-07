@@ -124,6 +124,31 @@ export const sendTestEmail = async (projectId, email) => {
   }
 };
 
+/* ------------------- ADD WEBHOOK ------------------- */
+export const addWebhook = async (projectId, payload) => {
+  try {
+    const { data } = await api.post(
+      `${PROJECTS_URL}/${projectId}/webhooks`,
+      payload,
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+};
+
+/* ------------------- DELETE WEBHOOK ------------------- */
+export const deleteWebhook = async (projectId, webhookId) => {
+  try {
+    const { data } = await api.delete(
+      `${PROJECTS_URL}/${projectId}/webhooks/${webhookId}`,
+    );
+    return data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+};
+
 /* ========================================================
    Error Normalization Helper
 ======================================================== */

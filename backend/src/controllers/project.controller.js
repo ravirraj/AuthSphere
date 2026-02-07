@@ -2,6 +2,7 @@ import Project from "../models/project.model.js";
 import EndUser from "../models/endUsers.models.js";
 import crypto from "crypto";
 import { logEvent } from "../utils/auditLogger.js";
+import { triggerWebhook } from "../utils/webhookSender.js";
 
 /* ============================================================
    CREATE PROJECT
@@ -207,6 +208,12 @@ export const rotateKeys = async (req, res) => {
       },
     });
 
+    // Trigger Webhook
+    triggerWebhook(project._id, "api_key.rotated", {
+      projectId: project._id,
+      timestamp: new Date().toISOString(),
+    });
+
     return res.status(200).json({
       success: true,
       message: "Keys rotated successfully",
@@ -335,6 +342,13 @@ export const deleteProjectUser = async (req, res) => {
         userAgent: req.headers["user-agent"],
         resourceId: user._id,
       },
+    });
+
+    // Trigger Webhook
+    triggerWebhook(projectId, "user.deleted", {
+      userId: user._id,
+      email: user.email,
+      projectId: project._id,
     });
 
     return res
@@ -556,5 +570,78 @@ export const sendTestEmail = async (req, res) => {
       success: false,
       message: err.message || "Failed to send test email",
     });
+  }
+};
+
+/* ============================================================
+   WEBHOOK MANAGEMENT
+============================================================ */
+export const addWebhook = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { url, events } = req.body;
+    const developerId = req.developer._id;
+
+    if (!url || !events || !Array.isArray(events) || events.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "URL and events are required" });
+    }
+
+    const secret = crypto.randomBytes(32).toString("hex");
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, developer: developerId },
+      {
+        $push: {
+          webhooks: { url, events, secret },
+        },
+      },
+      { new: true, runValidators: true },
+    );
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Webhook added successfully",
+      data: project.webhooks[project.webhooks.length - 1],
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteWebhook = async (req, res) => {
+  try {
+    const { projectId, webhookId } = req.params;
+    const developerId = req.developer._id;
+
+    const project = await Project.findOneAndUpdate(
+      { _id: projectId, developer: developerId },
+      {
+        $pull: {
+          webhooks: { _id: webhookId },
+        },
+      },
+      { new: true },
+    );
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project or Webhook not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Webhook deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
