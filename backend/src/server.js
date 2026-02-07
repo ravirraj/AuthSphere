@@ -1,19 +1,22 @@
-
-import { conf } from "./configs/env.js"
+import { createServer } from "http";
+import { conf } from "./configs/env.js";
 import app from "./app.js";
 import connectDB from "./database/connectDB.js";
 import { logStartup } from "./utils/startup.js";
+import { initSocket } from "./services/socket.service.js";
 
 const startServer = async () => {
   try {
     await connectDB();
 
-    app.listen(conf.port, () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    httpServer.listen(conf.port, () => {
       logStartup(conf.port);
     });
-
   } catch (error) {
-    console.error("✖ Server failed to start");
+    console.error("✖ Server failed to start", error);
     process.exit(1);
   }
 };
