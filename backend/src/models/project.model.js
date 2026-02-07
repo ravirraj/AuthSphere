@@ -34,6 +34,12 @@ const projectSchema = new mongoose.Schema(
     settings: {
       requireEmailVerification: { type: Boolean, default: false },
       mfaEnabled: { type: Boolean, default: false },
+      // Brute Force Protection
+      bruteForceProtection: {
+        enabled: { type: Boolean, default: true },
+        maxAttempts: { type: Number, default: 5 },
+        lockoutDuration: { type: Number, default: 900 }, // 15 mins in seconds
+      },
       // Token Lifecycle Management
       tokenValidity: {
         accessToken: { type: Number, default: 900 }, // 15 mins in seconds

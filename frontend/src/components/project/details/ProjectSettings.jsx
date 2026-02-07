@@ -80,6 +80,18 @@ const ProjectSettings = ({ project, onUpdated }) => {
     project.settings?.tokenValidity?.refreshToken?.toString() || "604800",
   );
 
+  // Brute Force Protection
+  const [bruteForceEnabled, setBruteForceEnabled] = useState(
+    project.settings?.bruteForceProtection?.enabled ?? true,
+  );
+  const [maxAttempts, setMaxAttempts] = useState(
+    project.settings?.bruteForceProtection?.maxAttempts?.toString() || "5",
+  );
+  const [lockoutDuration, setLockoutDuration] = useState(
+    project.settings?.bruteForceProtection?.lockoutDuration?.toString() ||
+      "900",
+  );
+
   // Providers
   const [providers, setProviders] = useState(() => {
     const map = {};
@@ -155,6 +167,14 @@ const ProjectSettings = ({ project, onUpdated }) => {
       refreshTokenVal !==
         (project.settings?.tokenValidity?.refreshToken?.toString() ||
           "604800") ||
+      bruteForceEnabled !==
+        (project.settings?.bruteForceProtection?.enabled ?? true) ||
+      maxAttempts !==
+        (project.settings?.bruteForceProtection?.maxAttempts?.toString() ||
+          "5") ||
+      lockoutDuration !==
+        (project.settings?.bruteForceProtection?.lockoutDuration?.toString() ||
+          "900") ||
       JSON.stringify(activeProviders) !== JSON.stringify(originalProviders)
     );
   }, [
@@ -166,6 +186,9 @@ const ProjectSettings = ({ project, onUpdated }) => {
     mfaEnabled,
     accessTokenVal,
     refreshTokenVal,
+    bruteForceEnabled,
+    maxAttempts,
+    lockoutDuration,
     providers,
     project,
   ]);
@@ -208,6 +231,11 @@ const ProjectSettings = ({ project, onUpdated }) => {
         settings: {
           requireEmailVerification: requireEmail,
           mfaEnabled,
+          bruteForceProtection: {
+            enabled: bruteForceEnabled,
+            maxAttempts: parseInt(maxAttempts),
+            lockoutDuration: parseInt(lockoutDuration),
+          },
           tokenValidity: {
             accessToken: parseInt(accessTokenVal),
             refreshToken: parseInt(refreshTokenVal),
@@ -563,6 +591,80 @@ const ProjectSettings = ({ project, onUpdated }) => {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* BRUTE FORCE PROTECTION */}
+              <div className="space-y-6">
+                <div className="flex items-start justify-between space-x-4 rounded-xl border p-4 bg-background/50 transition-colors hover:border-primary/50">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <Label className="font-semibold text-base">
+                        Brute-Force Protection
+                      </Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Prevent automated attacks by locking accounts after failed
+                      attempts.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={bruteForceEnabled}
+                    onCheckedChange={setBruteForceEnabled}
+                  />
+                </div>
+
+                {bruteForceEnabled && (
+                  <div className="grid gap-6 md:grid-cols-2 pl-4 border-l-2 border-primary/20 animate-in fade-in slide-in-from-left-2 duration-300">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Max Login Attempts</Label>
+                      <Select
+                        value={maxAttempts}
+                        onValueChange={setMaxAttempts}
+                      >
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue placeholder="Attempts" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3 Attempts</SelectItem>
+                          <SelectItem value="5">
+                            5 Attempts (Standard)
+                          </SelectItem>
+                          <SelectItem value="10">
+                            10 Attempts (Relaxed)
+                          </SelectItem>
+                          <SelectItem value="20">20 Attempts</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">
+                        Account will lock after reaching this threshold.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">Lockout Duration</Label>
+                      <Select
+                        value={lockoutDuration}
+                        onValueChange={setLockoutDuration}
+                      >
+                        <SelectTrigger className="bg-background/50">
+                          <SelectValue placeholder="Duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="300">5 Minutes</SelectItem>
+                          <SelectItem value="1800">30 Minutes</SelectItem>
+                          <SelectItem value="3600">1 Hour</SelectItem>
+                          <SelectItem value="86400">24 Hours</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-muted-foreground">
+                        How long the user must wait before trying again.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
