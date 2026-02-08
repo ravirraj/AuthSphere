@@ -231,6 +231,7 @@ const ProjectKeysCard = ({ project, onKeysRotated }) => {
             copyable
             codeToCopy={`import { initAuth } from "@authspherejs/sdk";\n\nconst auth = initAuth({\n  publicKey: "${project.publicKey}",\n  projectId: "${project._id}",\n  redirectUri: "${project.redirectUris?.[0] || "YOUR_CALLBACK_URL"}"\n});`}
             className="max-w-none bg-black/80 backdrop-blur-xl border-white/10 shadow-2xl ring-1 ring-white/5"
+            startOnView={false}
           >
             <TypingAnimation className="text-cyan-400 font-bold">
               $ npm install @authspherejs/sdk

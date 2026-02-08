@@ -29,6 +29,11 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import {
+  Terminal,
+  TypingAnimation,
+  AnimatedSpan,
+} from "@/components/ui/terminal";
 
 const AVAILABLE_EVENTS = [
   { id: "user.registered", label: "User Registered" },
@@ -337,21 +342,66 @@ const ProjectWebhooksCard = ({ project, onUpdated }) => {
             </div>
           </div>
 
-          <div className="mt-6">
-            <h4 className="font-semibold text-sm mb-3">
+          <div className="mt-8">
+            <h4 className="font-bold text-sm mb-4 flex items-center gap-2">
+              <Key className="h-4 w-4 text-primary" />
               Verification Example (Node.js)
             </h4>
-            <div className="relative group">
-              <pre className="p-4 rounded-lg bg-slate-950 text-slate-50 text-[10px] overflow-x-auto font-mono leading-relaxed border border-white/10">
-                {`const crypto = require('crypto');
+
+            <Terminal
+              copyable
+              codeToCopy={`const crypto = require("crypto");
 
 function verifySignature(payload, signature, secret) {
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = hmac.update(JSON.stringify(payload)).digest('hex');
+  const hmac = crypto.createHmac("sha256", secret);
+  const digest = hmac
+    .update(JSON.stringify(payload))
+    .digest("hex");
+
   return signature === digest;
 }`}
-              </pre>
-            </div>
+              className="max-w-none bg-black/80 backdrop-blur-xl border-white/10 shadow-2xl ring-1 ring-white/5"
+              startOnView={false}
+            >
+              <TypingAnimation className="text-cyan-400 font-bold">
+                $ node verify-signature.js
+              </TypingAnimation>
+
+              <AnimatedSpan className="text-zinc-500 italic">
+                <span># Verifying webhook signature</span>
+              </AnimatedSpan>
+
+              <AnimatedSpan className="text-slate-300">
+                <pre className="font-mono text-[13px] leading-relaxed">
+                  <span className="text-purple-400">const</span>{" "}
+                  <span className="text-blue-300">crypto</span>{" "}
+                  <span className="text-purple-400">= require</span>(
+                  <span className="text-emerald-400">"crypto"</span>);
+                  {"\n\n"}
+                  <span className="text-purple-400">function</span>{" "}
+                  <span className="text-yellow-300">verifySignature</span>(
+                  payload, signature, secret) {"{"}
+                  {"\n  "}
+                  <span className="text-purple-400">const</span>{" "}
+                  <span className="text-blue-300">hmac</span> =
+                  crypto.createHmac(
+                  <span className="text-emerald-400">"sha256"</span>, secret);
+                  {"\n  "}
+                  <span className="text-purple-400">const</span>{" "}
+                  <span className="text-blue-300">digest</span> = hmac
+                  {"\n    "}
+                  .update(JSON.stringify(payload))
+                  {"\n    "}
+                  .digest(
+                  <span className="text-emerald-400">"hex"</span>);
+                  {"\n\n  "}
+                  <span className="text-purple-400">return</span> signature ===
+                  digest;
+                  {"\n"}
+                  {"}"}
+                </pre>
+              </AnimatedSpan>
+            </Terminal>
           </div>
         </div>
       </CardContent>
