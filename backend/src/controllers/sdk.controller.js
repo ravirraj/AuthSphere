@@ -3,56 +3,41 @@ import { conf } from "../configs/env.js";
 import { emitEvent } from "../services/core/socket.service.js";
 import { triggerWebhook } from "../utils/webhookSender.js";
 import Session from "../models/session.model.js";
-
 import logger from "../utils/logger.js";
+import { successResponse } from "../utils/response.js";
+import { catchAsync, AppError } from "../utils/AppError.js";
+
 export const authRequests = sdkService.authRequests;
 export const authCodes = sdkService.authCodes;
 
 // ---------------------------
 // SDK AUTHORIZE ROUTE
 // ---------------------------
-export const authorize = async (req, res) => {
-  try {
-    const project = await sdkService.validateAuthorizeRequest(req.query);
-    const requestId = sdkService.createAuthRequest(req.query, project._id);
+export const authorize = catchAsync(async (req, res) => {
+  const project = await sdkService.validateAuthorizeRequest(req.query);
+  const requestId = sdkService.createAuthRequest(req.query, project._id);
 
-    logger.info(`SDK Auth request created: ${requestId}`);
+  logger.info(`SDK Auth request created: ${requestId}`);
 
-    emitEvent(project._id, "AUTH_REQUEST", {
-      requestId,
-      provider: req.query.provider,
-      ip: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
+  emitEvent(project._id, "AUTH_REQUEST", {
+    requestId,
+    provider: req.query.provider,
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
+  });
 
-    if (
-      req.headers.accept === "application/json" ||
-      req.query.json === "true"
-    ) {
-      return res.json({ requestId });
-    }
-
-    if (req.query.provider.toLowerCase() === "local") {
-      return res.redirect(`${conf.frontendUrl}/login?sdk_request=${requestId}`);
-    }
-
-    return res.redirect(
-      `/auth/${req.query.provider.toLowerCase()}?sdk=true&sdk_request=${requestId}`,
-    );
-  } catch (err) {
-    logger.error("SDK Authorize error:", { error: err.message });
-    return res
-      .status(
-        err.message.includes("Missing") || err.message.includes("Only")
-          ? 400
-          : 401,
-      )
-      .json({
-        error: "invalid_request",
-        error_description: err.message,
-      });
+  if (req.headers.accept === "application/json" || req.query.json === "true") {
+    return successResponse(res, "Auth request created", { requestId });
   }
-};
+
+  if (req.query.provider.toLowerCase() === "local") {
+    return res.redirect(`${conf.frontendUrl}/login?sdk_request=${requestId}`);
+  }
+
+  return res.redirect(
+    `/auth/${req.query.provider.toLowerCase()}?sdk=true&sdk_request=${requestId}`,
+  );
+});
 
 // ---------------------------
 // SDK CALLBACK
@@ -129,94 +114,81 @@ export const handleSDKCallback = async (
 // ---------------------------
 // TOKEN EXCHANGE
 // ---------------------------
-export const token = async (req, res) => {
-  try {
-    const { code, client_id, public_key, code_verifier } = req.body;
-    const clientId = client_id || public_key;
+export const token = catchAsync(async (req, res) => {
+  const { code, client_id, public_key, code_verifier } = req.body;
+  const clientId = client_id || public_key;
 
-    logger.info("Token Endpoint Params:", {
-      code: code ? "Present" : "Missing",
-      clientId,
-      hasVerifier: !!code_verifier,
-    });
+  logger.info("Token Endpoint Params:", {
+    code: code ? "Present" : "Missing",
+    clientId,
+    hasVerifier: !!code_verifier,
+  });
 
-    if (!code)
-      return res
-        .status(400)
-        .json({ error: "invalid_request", error_description: "Missing code" });
+  if (!code) {
+    throw new AppError("Missing code", 400);
+  }
 
-    const authData = sdkService.getAuthCode(code);
-    if (!authData)
-      return res.status(400).json({
-        error: "invalid_grant",
-        error_description: "Invalid or expired code",
-      });
+  const authData = sdkService.getAuthCode(code);
+  if (!authData) {
+    throw new AppError("Invalid or expired code", 400);
+  }
 
-    await sdkService.verifyPKCE(authData, code_verifier);
+  await sdkService.verifyPKCE(authData, code_verifier);
 
-    if (clientId && clientId !== authData.publicKey)
-      return res.status(400).json({ error: "invalid_client" });
+  if (clientId && clientId !== authData.publicKey) {
+    throw new AppError("invalid_client", 400);
+  }
 
-    const { project } = await sdkService
-      .getProjectAndUser(authData.projectId, authData.endUser.email)
-      .catch(() => ({ project: null }));
+  const { project } = await sdkService
+    .getProjectAndUser(authData.projectId, authData.endUser.email)
+    .catch(() => ({ project: null }));
 
-    if (!project) return res.status(400).json({ error: "invalid_client" });
+  if (!project) throw new AppError("invalid_client", 400);
 
-    // CORS Check
-    const origin = req.headers.origin;
-    if (
-      project.allowedOrigins?.length > 0 &&
-      (!origin || !project.allowedOrigins.includes(origin))
-    ) {
-      return res.status(403).json({
-        error: "access_denied",
-        error_description: "CORS: Origin not allowed",
-      });
-    }
+  // CORS Check
+  const origin = req.headers.origin;
+  if (
+    project.allowedOrigins?.length > 0 &&
+    (!origin || !project.allowedOrigins.includes(origin))
+  ) {
+    throw new AppError("CORS: Origin not allowed", 403);
+  }
 
-    sdkService.deleteAuthCode(code);
+  sdkService.deleteAuthCode(code);
 
-    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
-    const result = await sdkService.createSession(
-      authData.endUser,
-      project,
-      reqInfo,
-    );
+  const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+  const result = await sdkService.createSession(
+    authData.endUser,
+    project,
+    reqInfo,
+  );
 
-    triggerWebhook(project._id, "user.login", {
-      userId: authData.endUser._id,
+  triggerWebhook(project._id, "user.login", {
+    userId: authData.endUser._id,
+    email: authData.endUser.email,
+    username: authData.endUser.username,
+    provider: authData.endUser.provider || "local",
+    ip: req.ip,
+    timestamp: new Date().toISOString(),
+  });
+
+  emitEvent(project._id, "TOKEN_EXCHANGED", {
+    email: authData.endUser.email,
+    userId: authData.endUser._id,
+    ip: req.ip,
+  });
+
+  return successResponse(res, "Token exchanged successfully", {
+    ...result,
+    user: {
+      id: authData.endUser._id,
       email: authData.endUser.email,
       username: authData.endUser.username,
+      picture: authData.endUser.picture || "",
       provider: authData.endUser.provider || "local",
-      ip: req.ip,
-      timestamp: new Date().toISOString(),
-    });
-
-    emitEvent(project._id, "TOKEN_EXCHANGED", {
-      email: authData.endUser.email,
-      userId: authData.endUser._id,
-      ip: req.ip,
-    });
-
-    return res.json({
-      success: true,
-      ...result,
-      user: {
-        id: authData.endUser._id,
-        email: authData.endUser.email,
-        username: authData.endUser.username,
-        picture: authData.endUser.picture || "",
-        provider: authData.endUser.provider || "local",
-      },
-    });
-  } catch (err) {
-    logger.error("Token Exchange Error:", { error: err.message });
-    return res
-      .status(err.message.includes("verifier") ? 400 : 500)
-      .json({ error: "invalid_grant", error_description: err.message });
-  }
-};
+    },
+  });
+});
 
 // ---------------------------
 // REFRESH TOKEN

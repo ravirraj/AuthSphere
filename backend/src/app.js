@@ -3,6 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
+import compression from "compression";
+import crypto from "crypto";
 
 import logger, { stream } from "./utils/logger.js";
 import { handleError } from "./utils/AppError.js";
@@ -13,12 +15,20 @@ import homeHandler from "./home.js";
 
 const app = express();
 
+// --- Performance & Traceability ---
+app.use(compression());
+app.use((req, res, next) => {
+  req.id = crypto.randomUUID();
+  next();
+});
+
 // Use Morgan with Winston stream
-app.use(morgan("combined", { stream }));
+const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+app.use(morgan(morganFormat, { stream }));
 
 // Attach logger to request object
 app.use((req, res, next) => {
-  req.logger = logger;
+  req.logger = logger.child({ requestId: req.id });
   next();
 });
 

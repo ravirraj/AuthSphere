@@ -1,5 +1,6 @@
 import winston from "winston";
 import path from "path";
+import chalk from "chalk";
 import { conf } from "../configs/env.js";
 
 // Define log format
@@ -40,11 +41,24 @@ if (process.env.NODE_ENV !== "production") {
   logger.add(
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.colorize(),
         winston.format.timestamp({ format: "HH:mm:ss" }),
+        winston.format.colorize(),
         winston.format.printf(({ level, message, timestamp, ...meta }) => {
-          const metaStr = Object.keys(meta).length ? JSON.stringify(meta) : "";
-          return `${timestamp} ${level}: ${message} ${metaStr}`;
+          let metaStr = "";
+
+          // Only show meta if it has keys and is not empty
+          if (Object.keys(meta).length > 0) {
+            // Pretty print objects on new lines
+            metaStr = JSON.stringify(meta, null, 2);
+            // Colorize JSON if possible or keep clean
+          }
+
+          // Special handling for HTTP requests logged via Morgan/stream
+          if (message.includes("HTTP/")) {
+            return `${chalk.gray(timestamp)} ${message}`;
+          }
+
+          return `${chalk.gray(timestamp)} ${level}: ${message} ${metaStr ? "\n" + chalk.gray(metaStr) : ""}`;
         }),
       ),
     }),
