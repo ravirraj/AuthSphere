@@ -1,12 +1,9 @@
-import Project from "../models/project.model.js";
-import EndUser from "../models/endUsers.models.js";
-import crypto from "crypto";
-import { logEvent } from "../utils/auditLogger.js";
-import { triggerWebhook } from "../utils/webhookSender.js";
+import projectService from "../services/core/project.service.js";
+import { sendVerificationOTP } from "../services/auth/email.service.js";
 
 /* ============================================================
    CREATE PROJECT
-============================================================ */
+ ============================================================ */
 export const createProject = async (req, res) => {
   try {
     const { name, redirectUris, providers, logoUrl } = req.body;
@@ -29,60 +26,42 @@ export const createProject = async (req, res) => {
         .status(400)
         .json({ success: false, message: "At least one provider is required" });
 
-    const exists = await Project.findOne({ name, developer: developerId });
+    const exists = await projectService.getProjectByDeveloperAndName(
+      developerId,
+      name,
+    );
     if (exists)
       return res
         .status(409)
         .json({ success: false, message: "Project already exists" });
 
-    const publicKey = crypto.randomBytes(16).toString("hex");
-    const privateKey = crypto.randomBytes(32).toString("hex");
-
-    const project = await Project.create({
-      name,
-      publicKey,
-      privateKey,
-      developer: developerId,
-      redirectUris,
-      providers,
-      logoUrl,
-    });
-
-    // Log the event
-    await logEvent({
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const project = await projectService.createProject(
       developerId,
-      projectId: project._id,
-      action: "PROJECT_CREATED",
-      description: `New project "${name}" was created.`,
-      category: "project",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-      },
-    });
+      req.body,
+      reqInfo,
+    );
 
     return res.status(201).json({
       success: true,
       message: "Project created successfully",
-      data: project, // privateKey hidden by model
+      data: project,
     });
   } catch (err) {
     console.error("Create Project Error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
   }
 };
 
 /* ============================================================
    GET ALL PROJECTS
-============================================================ */
+ ============================================================ */
 export const getProjects = async (req, res) => {
   try {
     const developerId = req.developer._id;
-
-    const projects = await Project.find({ developer: developerId }).sort({
-      createdAt: -1,
-    });
-
+    const projects = await projectService.getProjectsByDeveloper(developerId);
     return res.status(200).json({ success: true, data: projects });
   } catch (err) {
     console.error("Get Projects Error:", err);
@@ -92,16 +71,13 @@ export const getProjects = async (req, res) => {
 
 /* ============================================================
    GET SINGLE PROJECT
-============================================================ */
+ ============================================================ */
 export const getProject = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    const project = await Project.findOne({
-      _id: projectId,
-      developer: developerId,
-    });
+    const project = await projectService.getProject(projectId, developerId);
 
     if (!project) {
       return res
@@ -118,7 +94,7 @@ export const getProject = async (req, res) => {
 
 /* ============================================================
    UPDATE PROJECT
-============================================================ */
+ ============================================================ */
 export const updateProject = async (req, res) => {
   try {
     const developerId = req.developer._id;
@@ -132,17 +108,19 @@ export const updateProject = async (req, res) => {
       "allowedOrigins",
       "logoUrl",
       "emailTemplate",
-    ]; // prevent modifying keys manually
+    ];
     const updates = {};
 
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
-    const updated = await Project.findOneAndUpdate(
-      { _id: projectId, developer: developerId },
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const updated = await projectService.updateProject(
+      projectId,
+      developerId,
       updates,
-      { new: true, runValidators: true },
+      reqInfo,
     );
 
     if (!updated) {
@@ -150,20 +128,6 @@ export const updateProject = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Project not found" });
     }
-
-    // Log the event
-    await logEvent({
-      developerId,
-      projectId: updated._id,
-      action: "PROJECT_UPDATED",
-      description: `Project settings for "${updated.name}" were updated.`,
-      category: "project",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-        details: { updates: Object.keys(updates) },
-      },
-    });
 
     return res.status(200).json({ success: true, data: updated });
   } catch (err) {
@@ -174,19 +138,17 @@ export const updateProject = async (req, res) => {
 
 /* ============================================================
    ROTATE PROJECT KEYS
-============================================================ */
+ ============================================================ */
 export const rotateKeys = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    const newPublicKey = crypto.randomBytes(16).toString("hex");
-    const newPrivateKey = crypto.randomBytes(32).toString("hex");
-
-    const project = await Project.findOneAndUpdate(
-      { _id: projectId, developer: developerId },
-      { publicKey: newPublicKey, privateKey: newPrivateKey },
-      { new: true },
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const project = await projectService.rotateKeys(
+      projectId,
+      developerId,
+      reqInfo,
     );
 
     if (!project) {
@@ -194,25 +156,6 @@ export const rotateKeys = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Project not found" });
     }
-
-    // Log the event
-    await logEvent({
-      developerId,
-      projectId: project._id,
-      action: "API_KEY_ROTATED",
-      description: "Project API keys were rotated.",
-      category: "security",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-      },
-    });
-
-    // Trigger Webhook
-    triggerWebhook(project._id, "api_key.rotated", {
-      projectId: project._id,
-      timestamp: new Date().toISOString(),
-    });
 
     return res.status(200).json({
       success: true,
@@ -227,35 +170,24 @@ export const rotateKeys = async (req, res) => {
 
 /* ============================================================
    DELETE PROJECT
-============================================================ */
+ ============================================================ */
 export const deleteProject = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    const project = await Project.findOneAndDelete({
-      _id: projectId,
-      developer: developerId,
-    });
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const project = await projectService.deleteProject(
+      projectId,
+      developerId,
+      reqInfo,
+    );
 
     if (!project) {
       return res
         .status(404)
         .json({ success: false, message: "Project not found" });
     }
-
-    // Log the event
-    await logEvent({
-      developerId,
-      action: "PROJECT_DELETED",
-      description: `Project "${project.name}" was deleted permanently.`,
-      category: "project",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-        resourceId: project._id,
-      },
-    });
 
     return res.status(200).json({
       success: true,
@@ -269,28 +201,19 @@ export const deleteProject = async (req, res) => {
 
 /* ============================================================
    GET PROJECT USERS
-============================================================ */
+ ============================================================ */
 export const getProjectUsers = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId } = req.params;
 
-    // 1. Verify project belongs to developer
-    const project = await Project.findOne({
-      _id: projectId,
-      developer: developerId,
-    });
-
-    if (!project) {
+    if (!(await projectService.verifyOwnership(projectId, developerId))) {
       return res
         .status(404)
         .json({ success: false, message: "Project not found" });
     }
 
-    // 2. Fetch users
-    const users = await EndUser.find({ projectId })
-      .select("-password")
-      .sort({ createdAt: -1 });
+    const users = await projectService.getProjectUsers(projectId);
 
     return res.status(200).json({
       success: true,
@@ -304,52 +227,25 @@ export const getProjectUsers = async (req, res) => {
 
 /* ============================================================
    DELETE PROJECT USER
-============================================================ */
+ ============================================================ */
 export const deleteProjectUser = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId, userId } = req.params;
 
-    // 1. Verify project belongs to developer
-    const project = await Project.findOne({
-      _id: projectId,
-      developer: developerId,
-    });
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const user = await projectService.deleteProjectUser(
+      projectId,
+      userId,
+      developerId,
+      reqInfo,
+    );
 
-    if (!project) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Project not found" });
-    }
-
-    // 2. Delete user
-    const user = await EndUser.findOneAndDelete({ _id: userId, projectId });
     if (!user) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "User or Project not found" });
     }
-
-    // Log the event
-    await logEvent({
-      developerId,
-      projectId,
-      action: "USER_DELETED",
-      description: `User "${user.email}" was deleted from project "${project.name}".`,
-      category: "user",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-        resourceId: user._id,
-      },
-    });
-
-    // Trigger Webhook
-    triggerWebhook(projectId, "user.deleted", {
-      userId: user._id,
-      email: user.email,
-      projectId: project._id,
-    });
 
     return res
       .status(200)
@@ -362,53 +258,28 @@ export const deleteProjectUser = async (req, res) => {
 
 /* ============================================================
    TOGGLE USER VERIFICATION
-============================================================ */
+ ============================================================ */
 export const toggleUserVerification = async (req, res) => {
   try {
     const developerId = req.developer._id;
     const { projectId, userId } = req.params;
 
-    // 1. Verify project belongs to developer
-    const project = await Project.findOne({
-      _id: projectId,
-      developer: developerId,
-    });
-
-    if (!project) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Project not found" });
-    }
-
-    // 2. Find and update user
-    const user = await EndUser.findOne({ _id: userId, projectId });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    user.isVerified = !user.isVerified;
-    await user.save();
-
-    // Log the event
-    await logEvent({
-      developerId,
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const result = await projectService.toggleUserVerification(
       projectId,
-      action: "USER_VERIFICATION_TOGGLED",
-      description: `Verification for user "${user.email}" was toggled to ${user.isVerified ? "verified" : "unverified"}.`,
-      category: "user",
-      metadata: {
-        ip: req.ip,
-        userAgent: req.headers["user-agent"],
-        resourceId: user._id,
-      },
-    });
+      userId,
+      developerId,
+      reqInfo,
+    );
+
+    if (result.error) {
+      return res.status(404).json({ success: false, message: result.error });
+    }
 
     return res.status(200).json({
       success: true,
-      message: `User ${user.isVerified ? "verified" : "unverified"} successfully`,
-      data: user,
+      message: `User ${result.user.isVerified ? "verified" : "unverified"} successfully`,
+      data: result.user,
     });
   } catch (err) {
     console.error("Toggle User Verification Error:", err);
@@ -417,13 +288,41 @@ export const toggleUserVerification = async (req, res) => {
 };
 
 /* ============================================================
-   GET CONFIGURED PROVIDERS (INTERNAL CONFIG CHECK)
-   Checks which .env variables are set for OAuth providers.
-   Returns detailed status for each provider.
-============================================================ */
+   TOGGLE USER BLOCK STATUS
+ ============================================================ */
+export const toggleUserBlock = async (req, res) => {
+  try {
+    const developerId = req.developer._id;
+    const { projectId, userId } = req.params;
+
+    const reqInfo = { ip: req.ip, userAgent: req.headers["user-agent"] };
+    const result = await projectService.toggleUserBlock(
+      projectId,
+      userId,
+      developerId,
+      reqInfo,
+    );
+
+    if (result.error) {
+      return res.status(404).json({ success: false, message: result.error });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User account ${result.user.isBlocked ? "blocked" : "unblocked"} successfully`,
+      data: result.user,
+    });
+  } catch (err) {
+    console.error("Toggle User Block Error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* ============================================================
+   GET CONFIGURED PROVIDERS
+ ============================================================ */
 export const getConfiguredProviders = async (req, res) => {
   try {
-    // Helper function to create provider status object
     const getProviderStatus = (clientId, clientSecret) => {
       const isConfigured = !!(clientId && clientSecret);
       return {
@@ -507,10 +406,7 @@ export const getConfiguredProviders = async (req, res) => {
       ),
     };
 
-    return res.status(200).json({
-      success: true,
-      data: providers,
-    });
+    return res.status(200).json({ success: true, data: providers });
   } catch (err) {
     console.error("Get Configured Providers Error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -519,7 +415,7 @@ export const getConfiguredProviders = async (req, res) => {
 
 /* ============================================================
    SEND TEST EMAIL
-============================================================ */
+ ============================================================ */
 export const sendTestEmail = async (req, res) => {
   try {
     const developerId = req.developer._id;
@@ -532,17 +428,13 @@ export const sendTestEmail = async (req, res) => {
         .json({ success: false, message: "Email is required" });
     }
 
-    const project = await Project.findOne({
-      _id: projectId,
-      developer: developerId,
-    });
+    const project = await projectService.getProject(projectId, developerId);
     if (!project) {
       return res
         .status(404)
         .json({ success: false, message: "Project not found" });
     }
 
-    // Use a mock OTP for testing
     const mockOtp = "123456";
     const mockMetadata = {
       ip: req.ip,
@@ -575,7 +467,7 @@ export const sendTestEmail = async (req, res) => {
 
 /* ============================================================
    WEBHOOK MANAGEMENT
-============================================================ */
+ ============================================================ */
 export const addWebhook = async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -588,16 +480,10 @@ export const addWebhook = async (req, res) => {
         .json({ success: false, message: "URL and events are required" });
     }
 
-    const secret = crypto.randomBytes(32).toString("hex");
-
-    const project = await Project.findOneAndUpdate(
-      { _id: projectId, developer: developerId },
-      {
-        $push: {
-          webhooks: { url, events, secret },
-        },
-      },
-      { new: true, runValidators: true },
+    const project = await projectService.addWebhook(
+      projectId,
+      developerId,
+      req.body,
     );
 
     if (!project) {
@@ -621,14 +507,10 @@ export const deleteWebhook = async (req, res) => {
     const { projectId, webhookId } = req.params;
     const developerId = req.developer._id;
 
-    const project = await Project.findOneAndUpdate(
-      { _id: projectId, developer: developerId },
-      {
-        $pull: {
-          webhooks: { _id: webhookId },
-        },
-      },
-      { new: true },
+    const project = await projectService.deleteWebhook(
+      projectId,
+      developerId,
+      webhookId,
     );
 
     if (!project) {
@@ -637,10 +519,109 @@ export const deleteWebhook = async (req, res) => {
         .json({ success: false, message: "Project or Webhook not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Webhook deleted successfully",
-    });
+    return res
+      .status(200)
+      .json({ success: true, message: "Webhook deleted successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const testWebhook = async (req, res) => {
+  try {
+    const { projectId, webhookId } = req.params;
+    const { event } = req.body;
+    const developerId = req.developer._id;
+
+    if (!event) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Event required" });
+    }
+
+    const { getProject } = await import("../services/core/project.service.js");
+    // We need to import projectService or use the one already imported at top
+    // projectService is default export at top: import projectService from "../services/core/project.service.js";
+
+    // Check if projectService is available in scope. Yes, line 1.
+    // However, I need to make sure I am not messing up imports.
+    // Ah, projectService is imported as default.
+
+    // Let's rely on existing import.
+    // But wait, getProject inside projectService might not be exactly what I need if I need secret.
+    // getProject returns the document, so it should have webhooks.
+
+    // Let's re-read project.service.js getProject.
+    // It does return Project.findOne(...).
+
+    // I'll proceed assuming projectService is available.
+
+    // But wait, I can't easily import crypto and axios inside function in ES modules without dynamic import or top level.
+    // Top level imports are better.
+    // I'll use dynamic imports for now to avoid messing up top of file.
+
+    const project = await (
+      await import("../services/core/project.service.js")
+    ).default.getProject(projectId, developerId);
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    // Find webhook
+    // Project model likely has webhooks array.
+    const webhook = project.webhooks.id(webhookId);
+    if (!webhook) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Webhook not found" });
+    }
+
+    const mockPayload = {
+      event,
+      timestamp: new Date().toISOString(),
+      projectId: project._id,
+      data: {
+        userId: "test_" + Math.random().toString(36).substring(7),
+        email: "test@example.com",
+        username: "test_user",
+        provider: "local",
+        isTest: true,
+      },
+    };
+
+    const crypto = await import("crypto");
+    const signature = crypto.default
+      .createHmac("sha256", webhook.secret)
+      .update(JSON.stringify(mockPayload))
+      .digest("hex");
+
+    const axios = (await import("axios")).default;
+
+    try {
+      const response = await axios.post(webhook.url, mockPayload, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-AuthSphere-Signature": signature,
+          "X-AuthSphere-Event": event,
+          "X-AuthSphere-Delivery": "test",
+        },
+        timeout: 5000,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `High-Five! Webhook delivered. remote_server_responded: ${response.status} ${response.statusText}`,
+      });
+    } catch (deliveryError) {
+      return res.status(502).json({
+        success: false,
+        message: `Delivery Failed: ${deliveryError.message}`,
+        details: deliveryError.response ? deliveryError.response.data : null,
+      });
+    }
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

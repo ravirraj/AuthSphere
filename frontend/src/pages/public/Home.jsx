@@ -1,327 +1,252 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 import useAuthStore from "@/store/authStore";
 
-// Shadcn UI Components
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+// Home Components
+import Hero from "@/components/home/Hero";
+import Architecture from "@/components/home/Architecture";
+import FunctionalSpecs from "@/components/home/FunctionalSpecs";
+import Integration from "@/components/home/Integration";
+import DataModel from "@/components/home/DataModel";
+import ErrorCodes from "@/components/home/ErrorCodes";
 
 // Icons
-import {
-  Shield, Zap, Code2, Lock, Users, Terminal, Activity,
-  Database, Server, Cpu, Layers, BarChart3, Globe, Key,
-  CheckCircle2, AlertCircle, FileCode, Network, LayoutDashboard,
-  Settings, Plus, ChevronRight, History
-} from "lucide-react";
+import { Fingerprint, Terminal, Shield, Globe } from "lucide-react";
+
+// -----------------------------------------------------------------------------
+// STATIC CONTENT & CONFIGURATION
+// -----------------------------------------------------------------------------
+
+const SYSTEM_MODULES = [
+  {
+    title: "Auth Core (OIDC)",
+    icon: <Fingerprint className="h-6 w-6 text-primary" />,
+    description:
+      "A high-throughput implementation of OAuth 2.0 and OpenID Connect 1.0. The engine manages the full identity lifecycle—from JIT provisioning via PKCE to cryptographically signed RS256 token rotation and session persistence across distributed clusters.",
+    details: [
+      "OAuth2.1 / OIDC compliance: full spec support",
+      "Stateless RS256 JWTs: with dynamic key rotation",
+      "PKCE + Authorization Code: secure mobile/web flows",
+      "MFA (TOTP/WebAuthn): multi-layer verification",
+      "Brute-force mitigation: adaptive rate limiting",
+      "Stateless revocation: using Bloom filters",
+    ],
+  },
+  {
+    title: "DX & Event Mesh",
+    icon: <Terminal className="h-6 w-6 text-primary" />,
+    description:
+      "A developer-first control plane. Exposes a gRPC-enabled Management API and an event-driven webhook mesh. Automates project orchestration, granular permission scoping, and real-time identity stream synchronization across your entire service ecosystem.",
+    details: [
+      "RESTful / gRPC Management: full API exposure",
+      "Scoped API Keys: precise permission guarding",
+      "HMAC-SHA256 Webhooks: real-time event sync",
+      "CLI / SDK Surface: Node, Python, Go, and React",
+      "OpenAPI v3.0 specs: auto-generated documentation",
+      "Project Isolation: logical multi-tenant separation",
+    ],
+  },
+  {
+    title: "Security & Auditing",
+    icon: <Shield className="h-6 w-6 text-primary" />,
+    description:
+      "Deep security integration providing immutable audit trails and real-time anomaly detection. Every request is scrubbed against a zero-trust policy engine, ensuring strictly isolated data environments and compliance with SOC2/GDPR identity standards.",
+    details: [
+      "Immutable Audit Records: per-request logging",
+      "AES-256-GCM Encryption: for sensitive PII data",
+      "Strict Security Headers: HSTS, CSP, and XFO",
+      "IP Geofencing: regional access control policies",
+      "Vulnerability Scanning: automated threat detection",
+      "Anomaly Detection: ML-driven login patterns",
+    ],
+  },
+  {
+    title: "Edge Distribution",
+    icon: <Globe className="h-6 w-6 text-primary" />,
+    description:
+      "Engineered for sub-10ms response times at any scale. The global infrastructure utilizes a tiered caching strategy—segregating high-frequency read operations from transactional write consistency to ensure zero-downtime identity resolution.",
+    details: [
+      "L1/L2 Cache Layer: multi-tier Redis clusters",
+      "Sharded Database Mesh: high-availability MongoDB",
+      "K8s Ready: automatic horizontal pod scaling",
+      "Health Probes: real-time liveness & readiness",
+      "Global Load Balancing: intelligent traffic routing",
+      "Anycast DNS: low-latency identity discovery",
+    ],
+  },
+];
+
+const API_EXAMPLES = {
+  node: `// Initialize the AuthSphere Client
+const { AuthSphere } = require('@authsphere/node-sdk');
+
+const auth = new AuthSphere({
+  projectId: process.env.AUTH_PROJECT_ID,
+  secretKey: process.env.AUTH_SECRET_KEY,
+});
+
+// Middleware to protect routes
+app.get('/api/protected', auth.middleware(), (req, res) => {
+  // Access validated user session
+  const user = req.session.user;
+  res.json({ message: \`Hello \${user.email}\` });
+});
+
+// Manually verify a token
+try {
+  const payload = await auth.verifyToken(token);
+  console.log('Valid token:', payload);
+} catch (error) {
+  console.error('Invalid token:', error.message);
+}`,
+
+  python: `# Install: pip install authsphere
+from authsphere import AuthSphereClient
+
+client = AuthSphereClient(
+    project_id="proj_123456",
+    secret_key="sk_live_abcdef"
+)
+
+# Protect a Flask route
+@app.route('/api/data')
+@client.require_auth
+def get_data(user):
+    return {"message": f"Welcome {user.email}"}
+
+# Verify token manually
+try:
+    user = client.verify_token(token_string)
+    print(user.id)
+except AuthError as e:
+    print(f"Authentication failed: {e}")`,
+
+  go: `package main
+
+import (
+    "github.com/authsphere/go-sdk"
+    "net/http"
+)
+
+func main() {
+    client := authsphere.NewClient(authsphere.Config{
+        ProjectID: "proj_123456",
+        SecretKey: "sk_live_abcdef",
+    })
+
+    http.Handle("/private", client.Middleware(http.HandlerFunc(handler)))
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    user := authsphere.GetUser(r.Context())
+    w.Write([]byte("Hello " + user.Email))
+}`,
+
+  curl: `# Exchange Authorization Code for Token
+curl -X POST https://api.authsphere.dev/v1/oauth/token \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "grant_type": "authorization_code",
+    "client_id": "proj_123456",
+    "client_secret": "sec_abcdef",
+    "code": "auth_code_xyz",
+    "redirect_uri": "https://myapp.com/callback"
+  }'
+
+# Response
+{
+  "access_token": "eyJhbGci...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "rt_98765..."
+}`,
+};
+
+const ERROR_CODES = [
+  {
+    code: "AUTH_001",
+    message: "Invalid API Key",
+    description:
+      "The provided API key is missing, malformed, or has been revoked.",
+    solution:
+      "Check your dashboard for the correct key and ensure it has the required scopes.",
+  },
+  {
+    code: "AUTH_002",
+    message: "Token Expired",
+    description:
+      "The access token has expired. Use the refresh token to obtain a new one.",
+    solution:
+      "Implement refresh token rotation and call /oauth/token to get a new access_token.",
+  },
+  {
+    code: "AUTH_003",
+    message: "Rate Limit Exceeded",
+    description:
+      "Too many requests from this IP or Project. Please wait before retrying.",
+    solution:
+      "Check X-RateLimit headers and implement exponential backoff in your client.",
+  },
+  {
+    code: "AUTH_004",
+    message: "Invalid Scope",
+    description:
+      "The requested scope is invalid or exceeds the permissions of the client.",
+    solution:
+      "Verify the scope names in your request and ensure the project allows them.",
+  },
+  {
+    code: "AUTH_005",
+    message: "MFA Required",
+    description:
+      "Multi-factor authentication is required to complete this action.",
+    solution:
+      "Redirect the user to the MFA verification flow before retrying the operation.",
+  },
+  {
+    code: "AUTH_006",
+    message: "Unauthorized Origin",
+    description:
+      "The request origin (CORS) is not whitelisted for this project.",
+    solution:
+      "Add your domain to the 'Allowed Origins' list in the project settings.",
+  },
+  {
+    code: "AUTH_007",
+    message: "Project Suspended",
+    description:
+      "The project has been deactivated due to billing or policy violations.",
+    solution:
+      "Contact AuthSphere support or check the billing console for status updates.",
+  },
+  {
+    code: "AUTH_008",
+    message: "Signature Mismatch",
+    description:
+      "The webhook HMAC-SHA256 signature does not match the payload.",
+    solution:
+      "Ensure you are using the correct Webhook Secret and raw request body.",
+  },
+];
+
+// -----------------------------------------------------------------------------
+// COMPONENT
+// -----------------------------------------------------------------------------
 
 const Home = () => {
   const { user } = useAuthStore();
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-transparent text-foreground font-sans selection:bg-primary/20 relative overflow-x-hidden">
+      {/* Global Background Pattern */}
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[40px_40px] pointer-events-none -z-20" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,rgba(var(--primary-rgb),0.05),transparent)] pointer-events-none -z-20" />
 
-      {/* SECTION 1: TECHNICAL OVERVIEW */}
-      <section className="pt-20 pb-12 border-b">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl">
-            <Badge variant="outline" className="mb-4 rounded-md font-mono text-[10px] uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
-              System Specification v2.4.0
-            </Badge>
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-              {user ? `Welcome back, ${user.username.split(' ')[0]}` : "AuthSphere Identity Infrastructure"}
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              {user
-                ? "You have active projects ready for management. Review your security logs or configure a new authentication provider below."
-                : "A high-performance authentication engine building on top of OAuth 2.0 and OpenID Connect standards. Designed for stateless session management and secure identity propagation across distributed systems."}
-            </p>
-            <div className="flex flex-wrap gap-4">
-              {user ? (
-                <>
-                  <Button asChild size="lg" className="gap-2">
-                    <Link to="/dashboard">
-                      <LayoutDashboard className="h-4 w-4" />
-                      Go to Dashboard
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="gap-2">
-                    <Link to="/settings">
-                      <Settings className="h-4 w-4" />
-                      Account Settings
-                    </Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button asChild size="lg" className="gap-2">
-                    <Link to="/register">
-                      <Plus className="h-4 w-4" />
-                      Create Project
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="gap-2">
-                    <Link to="/docs">
-                      <FileCode className="h-4 w-4" />
-                      API Reference
-                    </Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* DYNAMIC SECTION: QUICK ACTIONS (ONLY FOR LOGGED IN) */}
-      {user && (
-        <section className="py-12 border-b bg-primary/5">
-          <div className="container mx-auto px-6">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight">Quick Actions</h2>
-                <p className="text-sm text-muted-foreground">Jump back into your workflow</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-4 gap-4">
-              <Link to="/audit-logs" className="group p-4 bg-background border rounded-lg hover:border-primary transition-all">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded bg-primary/10 text-primary">
-                    <History className="h-4 w-4" />
-                  </div>
-                  <span className="font-bold text-sm text-foreground">Review Logs</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Check recent authentication events across your projects.</p>
-              </Link>
-              <Link to="/settings/sessions" className="group p-4 bg-background border rounded-lg hover:border-primary transition-all">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded bg-primary/10 text-primary">
-                    <Shield className="h-4 w-4" />
-                  </div>
-                  <span className="font-bold text-sm text-foreground">Security Audit</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Manage your personal account security and active sessions.</p>
-              </Link>
-              <Link to="/docs" className="group p-4 bg-background border rounded-lg hover:border-primary transition-all">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded bg-primary/10 text-primary">
-                    <Code2 className="h-4 w-4" />
-                  </div>
-                  <span className="font-bold text-sm text-foreground">API Explorer</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Test endpoints and browse technical implementation guides.</p>
-              </Link>
-              <div className="p-4 bg-primary text-primary-foreground rounded-lg flex flex-col justify-between">
-                <div>
-                  <h4 className="font-bold text-sm">Need Help?</h4>
-                  <p className="text-xs opacity-80 mt-1 text-primary-foreground">Our technical support is available 24/7 for standard tiers.</p>
-                </div>
-                <Button variant="secondary" size="sm" className="w-full mt-4 text-xs font-bold" asChild>
-                  <Link to="/docs">Contact Ops</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* SECTION 2: CORE TECHNICAL CAPABILITIES */}
-      <section className="py-20 border-b bg-muted/30">
-        <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold mb-10 flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-primary" />
-            Core Engine Capabilities
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-background">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Key className="h-4 w-4 text-primary" />
-                  OAuth 2.0 & OIDC
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-3">
-                <p>Full implementation of Authorization Code Grant with PKCE protection. Supports OpenID Connect (OIDC) for standard identity token structure.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="secondary" className="text-[10px]">PKCE</Badge>
-                  <Badge variant="secondary" className="text-[10px]">JWT</Badge>
-                  <Badge variant="secondary" className="text-[10px]">JWS/JWE</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Server className="h-4 w-4 text-primary" />
-                  Stateless Session
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-3">
-                <p>Distributed session handling using cryptographically signed refresh tokens. Eliminates the need for centralized database lookups on every request.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="secondary" className="text-[10px]">7-Day Persistence</Badge>
-                  <Badge variant="secondary" className="text-[10px]">Auto-Refresh</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-primary" />
-                  Security Protocols
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-3">
-                <p>Multi-factor Authentication (MFA) via TOTP, Rate limiting, and brute-force protection integrated at the protocol level.</p>
-                <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="secondary" className="text-[10px]">TOTP</Badge>
-                  <Badge variant="secondary" className="text-[10px]">Rate Limiting</Badge>
-                  <Badge variant="secondary" className="text-[10px]">IP Tracking</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 3: PROTOCOL & ENCRYPTION SPECS */}
-      <section className="py-20 border-b">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16">
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Security & Cryptography</h2>
-              <div className="space-y-6 text-sm">
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center">
-                    <Lock className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">AES-256-GCM Encryption</h4>
-                    <p className="text-muted-foreground">All sensitive project data and client secrets are encrypted at rest using AES-256-GCM with unique initialization vectors.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center">
-                    <Database className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">SHA-512 Hashing</h4>
-                    <p className="text-muted-foreground">Password verification uses salted SHA-512 iterations with high entropy, ensuring resistance to dictionary and rainbow table attacks.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">Full Audit Logging</h4>
-                    <p className="text-muted-foreground">Comprehensive tracking of every authentication event, metadata change, and API request for compliance and debugging.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-muted/50 rounded-xl border p-8">
-              <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <Terminal className="h-5 w-5" />
-                Integration Schema
-              </h3>
-              <div className="space-y-4 font-mono text-xs">
-                <div className="space-y-2">
-                  <p className="text-primary font-bold">// Initialize AuthSphere</p>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <p className="text-muted-foreground">POST /v1/auth/login</p>
-                    <p className="mt-2">&#123;</p>
-                    <p className="ml-4">"apiKey": "pk_live_28h9x...",</p>
-                    <p className="ml-4">"email": "user@example.com",</p>
-                    <p className="ml-4">"password": "••••••••"</p>
-                    <p>&#125;</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-primary font-bold">// Success Response</p>
-                  <div className="p-4 bg-background rounded-lg border">
-                    <p>&#123;</p>
-                    <p className="ml-4">"status": 200,</p>
-                    <p className="ml-4">"accessToken": "eyJhbG...",</p>
-                    <p className="ml-4">"expiresIn": 3600</p>
-                    <p>&#125;</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: DEPLOYMENT & SCALABILITY */}
-      <section className="py-20 border-b bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mb-12">
-            <h2 className="text-2xl font-bold mb-4">Infrastructure Architecture</h2>
-            <p className="text-muted-foreground">AuthSphere is designed as a global stateless service, allowing for horizontal scalability without session persistence bottlenecks.</p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="p-6 bg-background border rounded-lg">
-              <Globe className="h-5 w-5 mb-4 text-primary" />
-              <h4 className="font-bold mb-2">Global Edge</h4>
-              <p className="text-xs text-muted-foreground">Low-latency token verification via distributed nodes.</p>
-            </div>
-            <div className="p-6 bg-background border rounded-lg">
-              <Network className="h-5 w-5 mb-4 text-primary" />
-              <h4 className="font-bold mb-2">Internal Cache</h4>
-              <p className="text-xs text-muted-foreground">Redis-backed transient data storage for speed.</p>
-            </div>
-            <div className="p-6 bg-background border rounded-lg">
-              <FileCode className="h-5 w-5 mb-4 text-primary" />
-              <h4 className="font-bold mb-2">OpenAPI v3</h4>
-              <p className="text-xs text-muted-foreground">Fully typed API definitions for automated client generation.</p>
-            </div>
-            <div className="p-6 bg-background border rounded-lg">
-              <BarChart3 className="h-5 w-5 mb-4 text-primary" />
-              <h4 className="font-bold mb-2">Real-time Metrics</h4>
-              <p className="text-xs text-muted-foreground">Prometheus-compatible ingestion for service monitoring.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 5: FAQ & PROTOCOL DETAILS */}
-      <section className="py-20">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <h2 className="text-2xl font-bold mb-10 text-center">Frequently Asked Technical Questions</h2>
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="q1" className="border rounded-lg px-6">
-              <AccordionTrigger className="font-bold">How are tokens verified?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed">
-                AuthSphere uses RS256 (RSA Signature with SHA-256) for signing Access Tokens.
-                Your application can verify these tokens locally using your project's Public Key,
-                eliminating the need for an API call to AuthSphere on every request.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="q2" className="border rounded-lg px-6">
-              <AccordionTrigger className="font-bold">What protocols are supported for Social Login?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed">
-                We currently support OAuth 2.0 and OpenID Connect for GitHub, Google, and Discord.
-                The system standardizes all provider responses into a unified user object for your backend.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="q3" className="border rounded-lg px-6">
-              <AccordionTrigger className="font-bold">Is there a rate limit on the API?</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed">
-                Yes, to ensure system stability, we apply adaptive rate limiting based on your project tier.
-                The default limit for the Hobbyist tier is 100 requests per minute per IP.
-                Enterprise users have custom throughput limits.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </section>
+      <Hero user={user} />
+      <Architecture />
+      <FunctionalSpecs modules={SYSTEM_MODULES} />
+      <Integration />
+      <DataModel />
+      <ErrorCodes errorCodes={ERROR_CODES} />
     </div>
   );
 };

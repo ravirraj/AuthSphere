@@ -1,6 +1,7 @@
 import axios from "axios";
 import crypto from "crypto";
 import Project from "../models/project.model.js";
+import logger from "./logger.js";
 
 /**
  * Sends a webhook notification to the registered URL
@@ -41,17 +42,21 @@ export const triggerWebhook = async (projectId, event, data) => {
             timeout: 5000, // 5 second timeout
           });
 
-          console.log(
-            `✅ Webhook sent successfully to ${webhook.url} for event ${event}`,
-          );
+          logger.info(`Webhook sent successfully`, { url: webhook.url, event });
         } catch (error) {
-          console.error(`❌ Webhook failed for ${webhook.url}:`, error.message);
+          logger.error(`Webhook delivery failed`, {
+            url: webhook.url,
+            event,
+            error: error.message,
+          });
           // In a real production app, we would implement a retry queue here (e.g., BullMQ/Redis)
         }
       });
 
     await Promise.all(promises);
   } catch (error) {
-    console.error("Critical: Failed to trigger webhooks:", error.message);
+    logger.error("Critical: Failed to trigger webhooks", {
+      error: error.message,
+    });
   }
 };

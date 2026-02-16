@@ -316,11 +316,18 @@ const ProjectSettings = ({ project, onUpdated }) => {
                 <Settings className="h-5 w-5 text-primary" />
                 General Settings
               </CardTitle>
+              <CardDescription className="text-sm leading-relaxed mt-2">
+                Configure the basic identity and branding for your
+                authentication project. These settings control how your project
+                appears to developers and end users.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Project Name</Label>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3">
+                  <Label htmlFor="name" className="text-sm font-semibold">
+                    Project Name
+                  </Label>
                   <Input
                     id="name"
                     value={name}
@@ -328,9 +335,29 @@ const ProjectSettings = ({ project, onUpdated }) => {
                     placeholder="My Awesome App"
                     className="bg-background/50"
                   />
+                  <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">
+                        What it does:
+                      </span>{" "}
+                      This is the human-readable identifier for your project
+                      displayed throughout the dashboard and API responses.
+                    </p>
+                    <Separator className="my-2" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">
+                        Impact:
+                      </span>{" "}
+                      Changing this will update the project name everywhere in
+                      your dashboard. It does not affect API keys, client IDs,
+                      or existing integrations.
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo URL (Optional)</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="logo" className="text-sm font-semibold">
+                    Logo URL (Optional)
+                  </Label>
                   <Input
                     id="logo"
                     value={logoUrl}
@@ -338,15 +365,57 @@ const ProjectSettings = ({ project, onUpdated }) => {
                     placeholder="https://myapp.com/logo.png"
                     className="bg-background/50"
                   />
+                  <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">
+                        What it does:
+                      </span>{" "}
+                      Provide a publicly accessible URL to your project's logo
+                      image. This will be displayed in authentication flows and
+                      email templates.
+                    </p>
+                    <Separator className="my-2" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">
+                        Impact:
+                      </span>{" "}
+                      Users will see this logo during login, signup, and in
+                      verification emails. Supports PNG, JPG, SVG formats.
+                      Recommended size: 200x200px.
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Project ID</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">
+                  Project ID (Read-only)
+                </Label>
                 <div className="p-3 bg-muted/50 rounded-xl border font-mono text-xs text-muted-foreground select-all flex justify-between items-center group">
                   {project._id}
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] uppercase font-bold tracking-widest text-primary">
                     Click to select
                   </div>
+                </div>
+                <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      What it is:
+                    </span>{" "}
+                    This is your project's unique, immutable identifier used in
+                    all API calls and SDK configurations.
+                  </p>
+                  <Separator className="my-2 bg-primary/20" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      Usage:
+                    </span>{" "}
+                    Include this ID in your application's environment variables
+                    as{" "}
+                    <code className="px-1 py-0.5 bg-muted rounded text-primary font-mono">
+                      PROJECT_ID
+                    </code>
+                    . This cannot be changed once created.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -358,19 +427,67 @@ const ProjectSettings = ({ project, onUpdated }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Globe className="h-5 w-5 text-primary" />
-                Authentication Flow
+                Authentication Flow Configuration
               </CardTitle>
-              <CardDescription>
-                Configure how users interact with the login system.
+              <CardDescription className="text-sm leading-relaxed mt-2">
+                Define where users can be redirected after authentication and
+                which domains can make API requests to your project. These
+                settings are critical for security and proper OAuth 2.0 flow
+                implementation.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               {/* Redirect URIs */}
-              <div className="space-y-3">
-                <Label>OAuth Redirect URIs</Label>
-                <p className="text-sm text-muted-foreground">
-                  Callbacks after successful login.
-                </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 mt-1">
+                    <Globe className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-base font-semibold">
+                      OAuth Redirect URIs
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      Specify the exact URLs where users should be redirected
+                      after successful authentication.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="font-semibold text-foreground">
+                      What it does:
+                    </span>{" "}
+                    After a user logs in via OAuth, they will be redirected to
+                    one of these URLs with an authorization code. Your
+                    application must exchange this code for access tokens.
+                  </p>
+                  <Separator className="my-2 bg-blue-500/20" />
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="font-semibold text-foreground">
+                      Security:
+                    </span>{" "}
+                    Only exact matches are allowed. This prevents attackers from
+                    redirecting users to malicious sites. Always use HTTPS in
+                    production.
+                  </p>
+                  <Separator className="my-2 bg-blue-500/20" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      Examples:
+                    </span>{" "}
+                    <code className="px-1 py-0.5 bg-muted rounded text-primary font-mono text-[10px]">
+                      https://myapp.com/auth/callback
+                    </code>
+                    ,{" "}
+                    <code className="px-1 py-0.5 bg-muted rounded text-primary font-mono text-[10px]">
+                      http://localhost:3000/callback
+                    </code>{" "}
+                    (dev only)
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   {redirectUris.map((uri, index) => (
                     <div key={index} className="flex gap-2">
@@ -406,7 +523,7 @@ const ProjectSettings = ({ project, onUpdated }) => {
                     onClick={() => addToList(redirectUris, setRedirectUris)}
                     className="gap-2 border-dashed"
                   >
-                    <Plus className="h-4 w-4" /> Add URI
+                    <Plus className="h-4 w-4" /> Add Redirect URI
                   </Button>
                 </div>
               </div>
@@ -414,11 +531,58 @@ const ProjectSettings = ({ project, onUpdated }) => {
               <Separator />
 
               {/* Allowed Origins */}
-              <div className="space-y-3">
-                <Label>Allowed Web Origins (CORS)</Label>
-                <p className="text-sm text-muted-foreground">
-                  Domains allowed to make API requests.
-                </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 mt-1">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-base font-semibold">
+                      Allowed Web Origins (CORS)
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      Define which domains are permitted to make cross-origin
+                      API requests to your authentication endpoints.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="font-semibold text-foreground">
+                      What it does:
+                    </span>{" "}
+                    Enables your frontend applications to communicate with the
+                    AuthSphere API from browsers. Without this, browsers will
+                    block requests due to CORS (Cross-Origin Resource Sharing)
+                    policy.
+                  </p>
+                  <Separator className="my-2 bg-amber-500/20" />
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="font-semibold text-foreground">
+                      Impact:
+                    </span>{" "}
+                    Adding a domain here allows JavaScript running on that
+                    domain to call your authentication APIs. Only add domains
+                    you control and trust.
+                  </p>
+                  <Separator className="my-2 bg-amber-500/20" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      Format:
+                    </span>{" "}
+                    Include protocol and domain only.{" "}
+                    <code className="px-1 py-0.5 bg-muted rounded text-primary font-mono text-[10px]">
+                      https://myapp.com
+                    </code>{" "}
+                    ✓ |{" "}
+                    <code className="px-1 py-0.5 bg-muted rounded text-red-500 font-mono text-[10px]">
+                      https://myapp.com/path
+                    </code>{" "}
+                    ✗
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   {allowedOrigins.map((origin, index) => (
                     <div key={index} className="flex gap-2">
@@ -474,37 +638,81 @@ const ProjectSettings = ({ project, onUpdated }) => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Lock className="h-5 w-5 text-primary" />
-                Security Policies
+                Security Policies & Session Management
               </CardTitle>
+              <CardDescription className="text-sm leading-relaxed mt-2">
+                Configure authentication security measures, session token
+                lifetimes, and protection mechanisms. These settings directly
+                impact your application's security posture and user experience.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="flex items-start justify-between space-x-4 rounded-xl border p-4 bg-background/50 transition-colors hover:border-primary/50">
-                  <div className="space-y-1">
-                    <Label className="font-semibold">
-                      Require Email Verification
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Force email check before login.
-                    </p>
-                  </div>
-                  <Switch
-                    checked={requireEmail}
-                    onCheckedChange={setRequireEmail}
-                  />
-                </div>
+            <CardContent className="space-y-8">
+              {/* Authentication Requirements */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  Authentication Requirements
+                </h3>
 
-                <div className="flex items-start justify-between space-x-4 rounded-xl border p-4 bg-background/50 transition-colors hover:border-primary/50">
-                  <div className="space-y-1">
-                    <Label className="font-semibold">Enable MFA (Beta)</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enforce Multi-Factor Auth.
-                    </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="flex items-start justify-between space-x-4 rounded-xl border p-5 bg-background/50 transition-colors hover:border-primary/50">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-primary" />
+                        <Label className="font-semibold text-base">
+                          Require Email Verification
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        When enabled, users must verify their email address
+                        before they can access your application.
+                      </p>
+                      <div className="p-2 bg-blue-500/5 rounded border border-blue-500/20 mt-2">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">
+                            Impact:
+                          </span>{" "}
+                          Users will receive a verification email with a unique
+                          link. Login attempts will be blocked until
+                          verification is complete. Recommended for production
+                          applications.
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={requireEmail}
+                      onCheckedChange={setRequireEmail}
+                    />
                   </div>
-                  <Switch
-                    checked={mfaEnabled}
-                    onCheckedChange={setMfaEnabled}
-                  />
+
+                  <div className="flex items-start justify-between space-x-4 rounded-xl border p-5 bg-background/50 transition-colors hover:border-primary/50">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        <Label className="font-semibold text-base">
+                          Enable MFA (Beta)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Enforce Time-based One-Time Password (TOTP) multi-factor
+                        authentication for all users.
+                      </p>
+                      <div className="p-2 bg-amber-500/5 rounded border border-amber-500/20 mt-2">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">
+                            Impact:
+                          </span>{" "}
+                          Users must set up an authenticator app (Google
+                          Authenticator, Authy) and enter a 6-digit code on
+                          every login. Significantly increases security but may
+                          impact user experience.
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={mfaEnabled}
+                      onCheckedChange={setMfaEnabled}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -519,7 +727,8 @@ const ProjectSettings = ({ project, onUpdated }) => {
                         Email Verification is Active
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        Customize branding, logo, and colors for emails.
+                        Customize branding, logo, and colors for verification
+                        emails.
                       </p>
                     </div>
                   </div>
@@ -539,15 +748,41 @@ const ProjectSettings = ({ project, onUpdated }) => {
 
               <Separator />
 
+              {/* Session Management */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold">Session Management</h4>
+                  <Clock className="h-5 w-5 text-primary" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                    Session Token Lifetimes
+                  </h3>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Access Token Lifetime</Label>
+                <div className="p-4 bg-muted/30 rounded-lg border">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="font-semibold text-foreground">
+                      What are tokens?
+                    </span>{" "}
+                    AuthSphere uses two types of JWT tokens:{" "}
+                    <strong>Access Tokens</strong> (short-lived, for API
+                    requests) and <strong>Refresh Tokens</strong> (long-lived,
+                    for obtaining new access tokens).
+                  </p>
+                  <Separator className="my-2" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">
+                      Security Trade-off:
+                    </span>{" "}
+                    Shorter lifetimes are more secure but require more frequent
+                    token refreshes. Longer lifetimes improve UX but increase
+                    risk if tokens are compromised.
+                  </p>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">
+                      Access Token Lifetime
+                    </Label>
                     <Select
                       value={accessTokenVal}
                       onValueChange={setAccessTokenVal}
@@ -565,13 +800,29 @@ const ProjectSettings = ({ project, onUpdated }) => {
                         <SelectItem value="86400">24 Hours</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Short-lived token for API access.
-                    </p>
+                    <div className="p-3 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mb-1">
+                        <span className="font-semibold text-foreground">
+                          Purpose:
+                        </span>{" "}
+                        Used for authenticating API requests. Included in the
+                        Authorization header as a Bearer token.
+                      </p>
+                      <Separator className="my-1.5 bg-blue-500/20" />
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        <span className="font-semibold text-foreground">
+                          Recommendation:
+                        </span>{" "}
+                        Keep this short (15-60 minutes) for security. Your app
+                        will automatically refresh it using the refresh token.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Refresh Token Lifetime</Label>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">
+                      Refresh Token Lifetime
+                    </Label>
                     <Select
                       value={refreshTokenVal}
                       onValueChange={setRefreshTokenVal}
@@ -586,9 +837,24 @@ const ProjectSettings = ({ project, onUpdated }) => {
                         <SelectItem value="7776000">90 Days</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Long-lived token to maintain session.
-                    </p>
+                    <div className="p-3 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                      <p className="text-[10px] text-muted-foreground leading-relaxed mb-1">
+                        <span className="font-semibold text-foreground">
+                          Purpose:
+                        </span>{" "}
+                        Used to obtain new access tokens without requiring the
+                        user to log in again. Stored securely (httpOnly cookie
+                        recommended).
+                      </p>
+                      <Separator className="my-1.5 bg-emerald-500/20" />
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        <span className="font-semibold text-foreground">
+                          Recommendation:
+                        </span>{" "}
+                        Set based on your "remember me" duration. After this
+                        expires, users must log in again.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -597,18 +863,29 @@ const ProjectSettings = ({ project, onUpdated }) => {
 
               {/* BRUTE FORCE PROTECTION */}
               <div className="space-y-6">
-                <div className="flex items-start justify-between space-x-4 rounded-xl border p-4 bg-background/50 transition-colors hover:border-primary/50">
-                  <div className="space-y-1">
+                <div className="flex items-start justify-between space-x-4 rounded-xl border p-5 bg-background/50 transition-colors hover:border-primary/50">
+                  <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <ShieldCheck className="h-5 w-5 text-primary" />
                       <Label className="font-semibold text-base">
                         Brute-Force Protection
                       </Label>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Prevent automated attacks by locking accounts after failed
-                      attempts.
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Automatically lock user accounts after multiple failed
+                      login attempts to prevent password guessing attacks.
                     </p>
+                    <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/20 mt-2">
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        <span className="font-semibold text-foreground">
+                          How it works:
+                        </span>{" "}
+                        After reaching the maximum failed attempts, the account
+                        is temporarily locked. Users must wait for the lockout
+                        duration or use a password reset link. Highly
+                        recommended for all production applications.
+                      </p>
+                    </div>
                   </div>
                   <Switch
                     checked={bruteForceEnabled}
@@ -617,9 +894,11 @@ const ProjectSettings = ({ project, onUpdated }) => {
                 </div>
 
                 {bruteForceEnabled && (
-                  <div className="grid gap-6 md:grid-cols-2 pl-4 border-l-2 border-primary/20 animate-in fade-in slide-in-from-left-2 duration-300">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Max Login Attempts</Label>
+                  <div className="grid gap-6 md:grid-cols-2 pl-6 border-l-2 border-primary/20 animate-in fade-in slide-in-from-left-2 duration-300">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">
+                        Max Login Attempts
+                      </Label>
                       <Select
                         value={maxAttempts}
                         onValueChange={setMaxAttempts}
@@ -638,13 +917,22 @@ const ProjectSettings = ({ project, onUpdated }) => {
                           <SelectItem value="20">20 Attempts</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] text-muted-foreground">
-                        Account will lock after reaching this threshold.
-                      </p>
+                      <div className="p-2 bg-muted/50 rounded border">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">
+                            What happens:
+                          </span>{" "}
+                          After this many consecutive failed login attempts, the
+                          account will be locked. Failed attempts are tracked
+                          per user account.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-sm">Lockout Duration</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">
+                        Lockout Duration
+                      </Label>
                       <Select
                         value={lockoutDuration}
                         onValueChange={setLockoutDuration}
@@ -659,9 +947,16 @@ const ProjectSettings = ({ project, onUpdated }) => {
                           <SelectItem value="86400">24 Hours</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] text-muted-foreground">
-                        How long the user must wait before trying again.
-                      </p>
+                      <div className="p-2 bg-muted/50 rounded border">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">
+                            What happens:
+                          </span>{" "}
+                          The user must wait this long before attempting to log
+                          in again. Alternatively, they can use the "Forgot
+                          Password" flow to reset immediately.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

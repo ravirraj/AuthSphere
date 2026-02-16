@@ -9,10 +9,12 @@ import {
   getProjectUsers,
   deleteProjectUser,
   toggleUserVerification,
+  toggleUserBlock,
   getConfiguredProviders,
   sendTestEmail,
   addWebhook,
   deleteWebhook,
+  testWebhook,
 } from "../controllers/project.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -47,6 +49,9 @@ router.delete("/:projectId/users/:userId", deleteProjectUser);
 // 👥 Toggle user verification
 router.patch("/:projectId/users/:userId/verify", toggleUserVerification);
 
+// 👥 Toggle user block status
+router.patch("/:projectId/users/:userId/block", toggleUserBlock);
+
 // ⚙ Get backend provider configuration
 router.get("/:projectId/providers-config", getConfiguredProviders);
 
@@ -56,6 +61,7 @@ router.post("/:projectId/send-test-email", sendTestEmail);
 // 🪝 Webhook routes
 router.post("/:projectId/webhooks", addWebhook);
 router.delete("/:projectId/webhooks/:webhookId", deleteWebhook);
+router.post("/:projectId/webhooks/:webhookId/test", testWebhook);
 
 // 🗑 Delete project
 router.delete("/:projectId", deleteProject);
