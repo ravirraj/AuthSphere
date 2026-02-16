@@ -95,7 +95,7 @@ const ProjectLogsCard = ({ projectId }) => {
     try {
       if (!dateString) return "N/A";
       return format(new Date(dateString), "MMM dd, HH:mm:ss");
-    } catch (e) {
+    } catch {
       return "Invalid Date";
     }
   };

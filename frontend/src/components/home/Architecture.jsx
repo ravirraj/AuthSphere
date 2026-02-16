@@ -49,8 +49,8 @@ const nodes = {
   ],
 };
 
-// eslint-disable-next-line no-unused-vars
-const ArchNode = React.forwardRef(({ icon: Icon, title, color }, ref) => {
+const ArchNode = React.forwardRef((props, ref) => {
+  const { icon: Icon, title, color } = props;
   return (
     <div
       ref={ref}

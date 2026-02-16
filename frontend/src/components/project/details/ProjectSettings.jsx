@@ -93,7 +93,7 @@ const ProjectSettings = ({ project, onUpdated }) => {
   );
 
   // Providers
-  const [providers, setProviders] = useState(() => {
+  const [providers] = useState(() => {
     const map = {};
     allProvidersList.forEach((p) => {
       map[p.id] = project.providers?.includes(p.id) ?? false;

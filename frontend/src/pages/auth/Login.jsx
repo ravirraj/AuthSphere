@@ -39,6 +39,7 @@ const Login = () => {
   const handleSocialLogin = (provider) => {
     // If sdk_request exists, we should probably pass it to the social login too
     const baseUrl = `${import.meta.env.VITE_BACKEND_URL}/auth/${provider}`;
+    // eslint-disable-next-line react-hooks/immutability
     window.location.href = sdk_request
       ? `${baseUrl}?sdk_request=${sdk_request}`
       : baseUrl;
