@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   XAxis,
@@ -54,7 +54,7 @@ const StatsCard = ({
   title,
   value,
   trend,
-  icon: Icon,
+  icon: Icon, // eslint-disable-line no-unused-vars
   description,
   color = "primary",
 }) => (
@@ -130,7 +130,6 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const ProjectAnalytics = () => {
   const { projectId } = useParams();
-  const navigate = useNavigate();
   const { overview, charts, activity, isLoading, isError } =
     useAnalytics(projectId);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getProject } from "@/api/ProjectAPI";
 
@@ -39,7 +39,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadProject = async () => {
+  const loadProject = React.useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -55,11 +55,11 @@ const ProjectDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     if (projectId) loadProject();
-  }, [projectId]);
+  }, [projectId, loadProject]);
 
   /* LOADING STATE */
   if (loading) {

@@ -36,7 +36,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+
 import { formatDistanceToNow } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -147,14 +147,8 @@ const SessionCard = ({ session, onRevoke }) => (
 );
 
 const SessionManagement = () => {
-  const {
-    sessions,
-    isLoading,
-    revokeSession,
-    revokeOthers,
-    revokeAll,
-    isRevoking,
-  } = useSessions();
+  const { sessions, isLoading, revokeSession, revokeOthers, revokeAll } =
+    useSessions();
   const navigate = useNavigate();
 
   const handleRevokeAll = async () => {

@@ -93,7 +93,7 @@ const ProjectSettings = ({ project, onUpdated }) => {
   );
 
   // Providers
-  const [providers, setProviders] = useState(() => {
+  const [providers] = useState(() => {
     const map = {};
     allProvidersList.forEach((p) => {
       map[p.id] = project.providers?.includes(p.id) ?? false;
@@ -203,12 +203,6 @@ const ProjectSettings = ({ project, onUpdated }) => {
   const removeFromList = (list, setList, index) =>
     setList(list.filter((_, i) => i !== index));
 
-  const toggleProvider = (id) => {
-    const provider = allProvidersList.find((p) => p.id === id);
-    if (provider?.status !== "ready") return;
-    setProviders((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   // --- HANDLERS ---
   const handleSave = async () => {
     try {
@@ -263,7 +257,7 @@ const ProjectSettings = ({ project, onUpdated }) => {
       await deleteProject(project._id);
       toast.success("Project deleted");
       navigate("/dashboard");
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete project");
     } finally {
       setDeleting(false);

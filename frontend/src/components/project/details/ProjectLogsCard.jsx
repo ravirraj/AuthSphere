@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { getProjectLogs } from "@/api/AuditLogAPI";
 import { format } from "date-fns";
 import {
@@ -46,7 +46,7 @@ const ProjectLogsCard = ({ projectId }) => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all"); // all, security, verify, flow
 
-  const fetchLogs = async () => {
+  const fetchLogs = React.useCallback(async () => {
     try {
       setLoading(true);
       const res = await getProjectLogs(projectId);
@@ -58,11 +58,11 @@ const ProjectLogsCard = ({ projectId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     if (projectId) fetchLogs();
-  }, [projectId]);
+  }, [projectId, fetchLogs]);
 
   const getIcon = (category) => {
     switch (category) {
@@ -95,7 +95,7 @@ const ProjectLogsCard = ({ projectId }) => {
     try {
       if (!dateString) return "N/A";
       return format(new Date(dateString), "MMM dd, HH:mm:ss");
-    } catch (e) {
+    } catch {
       return "Invalid Date";
     }
   };

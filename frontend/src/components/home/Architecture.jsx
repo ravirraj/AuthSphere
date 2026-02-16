@@ -49,29 +49,38 @@ const nodes = {
   ],
 };
 
-const ArchNode = React.forwardRef(({ icon: Icon, title, color }, ref) => (
-  <div
-    ref={ref}
-    className="z-40 flex items-center px-3 py-2.5 rounded-xl bg-background border border-border/60 hover:border-border transition-all duration-300 w-full max-w-[175px] group"
-  >
+const ArchNode = React.forwardRef((props, ref) => {
+  const { icon: Icon, title, color } = props;
+  return (
     <div
-      style={{ backgroundColor: `${color}15`, borderColor: `${color}30` }}
-      className="p-2 rounded-lg border transition-all duration-500 group-hover:scale-105"
+      ref={ref}
+      className="z-40 flex items-center px-3 py-2.5 rounded-xl bg-background border border-border/60 hover:border-border transition-all duration-300 w-full max-w-[175px] group"
     >
-      <Icon style={{ color: color }} className="h-4 w-4" />
+      <div
+        style={{ backgroundColor: `${color}15`, borderColor: `${color}30` }}
+        className="p-2 rounded-lg border transition-all duration-500 group-hover:scale-105"
+      >
+        <Icon style={{ color: color }} className="h-4 w-4" />
+      </div>
+      <span className="ml-3 text-[11px] font-semibold tracking-tight text-foreground/70 group-hover:text-foreground transition-colors truncate">
+        {title}
+      </span>
     </div>
-    <span className="ml-3 text-[11px] font-semibold tracking-tight text-foreground/70 group-hover:text-foreground transition-colors truncate">
-      {title}
-    </span>
-  </div>
-));
+  );
+});
 ArchNode.displayName = "ArchNode";
 
 const Architecture = () => {
   const containerRef = useRef(null);
   const coreRef = useRef(null);
-  const leftRefs = useRef(nodes.left.map(() => React.createRef()));
-  const rightRefs = useRef(nodes.right.map(() => React.createRef()));
+  const leftRefs = React.useMemo(
+    () => nodes.left.map(() => React.createRef()),
+    [],
+  );
+  const rightRefs = React.useMemo(
+    () => nodes.right.map(() => React.createRef()),
+    [],
+  );
 
   return (
     <section
@@ -107,7 +116,7 @@ const Architecture = () => {
             {nodes.left.map((node, i) => (
               <ArchNode
                 key={node.id}
-                ref={leftRefs.current[i]}
+                ref={leftRefs[i]}
                 icon={node.icon}
                 title={node.title}
                 color={node.color}
@@ -141,7 +150,7 @@ const Architecture = () => {
             {nodes.right.map((node, i) => (
               <ArchNode
                 key={node.id}
-                ref={rightRefs.current[i]}
+                ref={rightRefs[i]}
                 icon={node.icon}
                 title={node.title}
                 color={node.color}
@@ -156,7 +165,7 @@ const Architecture = () => {
         <AnimatedBeam
           key={`l-${node.id}`}
           containerRef={containerRef}
-          fromRef={leftRefs.current[i]}
+          fromRef={leftRefs[i]}
           toRef={coreRef}
           duration={3 + i * 0.5}
           curvature={i < 3 ? -40 : 40}
@@ -173,7 +182,7 @@ const Architecture = () => {
           key={`r-${node.id}`}
           containerRef={containerRef}
           fromRef={coreRef}
-          toRef={rightRefs.current[i]}
+          toRef={rightRefs[i]}
           duration={3 + i * 0.4}
           curvature={i < 3 ? -40 : 40}
           pathColor={node.color}

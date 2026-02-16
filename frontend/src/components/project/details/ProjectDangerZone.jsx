@@ -16,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,7 +40,7 @@ const ProjectDangerZone = ({ project }) => {
       } else {
         toast.error(res?.message || "Failed to delete project");
       }
-    } catch (err) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setIsDeleting(false);
@@ -64,17 +64,14 @@ const ProjectDangerZone = ({ project }) => {
         <div>
           <p className="font-semibold mb-1">Delete this project</p>
           <p className="text-sm text-muted-foreground max-w-lg">
-            Permanently delete all project data, including API keys and user sessions. 
-            This action cannot be undone.
+            Permanently delete all project data, including API keys and user
+            sessions. This action cannot be undone.
           </p>
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button
-              variant="destructive"
-              className="gap-2 shrink-0"
-            >
+            <Button variant="destructive" className="gap-2 shrink-0">
               <Trash2 className="h-4 w-4" />
               Delete Project
             </Button>
@@ -86,12 +83,15 @@ const ProjectDangerZone = ({ project }) => {
               </div>
               <DialogTitle className="text-center">Delete Project?</DialogTitle>
               <DialogDescription className="text-center">
-                This action cannot be undone. Type <strong>{project.name}</strong> to confirm.
+                This action cannot be undone. Type{" "}
+                <strong>{project.name}</strong> to confirm.
               </DialogDescription>
             </DialogHeader>
 
             <div className="py-4">
-              <Label htmlFor="confirm" className="sr-only">Project name</Label>
+              <Label htmlFor="confirm" className="sr-only">
+                Project name
+              </Label>
               <Input
                 id="confirm"
                 placeholder={project.name}
@@ -102,10 +102,7 @@ const ProjectDangerZone = ({ project }) => {
             </div>
 
             <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
               <Button

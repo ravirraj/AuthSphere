@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getProjectUsers,
   deleteProjectUser,
@@ -71,21 +71,21 @@ const ProjectUsersCard = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getProjectUsers(projectId);
       if (res.success) setUsers(res.data);
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     if (projectId) fetchUsers();
-  }, [projectId]);
+  }, [projectId, fetchUsers]);
 
   const handleDelete = async (userId) => {
     try {
