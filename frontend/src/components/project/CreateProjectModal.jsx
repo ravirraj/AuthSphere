@@ -48,7 +48,7 @@ const CreateProjectModal = ({ open, onClose, onCreated }) => {
         onCreated(res.data);
         onClose();
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to create project");
     } finally {
       setLoading(false);
@@ -102,17 +102,14 @@ const CreateProjectModal = ({ open, onClose, onCreated }) => {
 
           <div className="p-3 bg-muted/50 rounded-lg border text-sm">
             <p className="text-muted-foreground">
-              Creates a dedicated AES-256 encrypted database partition for your users
+              Creates a dedicated AES-256 encrypted database partition for your
+              users
             </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
 

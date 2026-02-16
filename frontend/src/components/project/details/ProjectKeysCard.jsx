@@ -30,7 +30,6 @@ import { allProvidersList } from "@/lib/providers";
 const ProjectKeysCard = ({ project, onKeysRotated }) => {
   const [copied, setCopied] = useState(false);
   const [rotating, setRotating] = useState(false);
-  const [showKeys, setShowKeys] = useState(false);
 
   const handleCopy = async (text) => {
     await navigator.clipboard.writeText(text);

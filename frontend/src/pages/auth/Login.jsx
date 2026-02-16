@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import useAuthStore from '@/store/authStore';
-import { toast } from 'sonner';
-import { useLogin } from '@/hooks/useAuthQuery';
+import React, { useState } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import useAuthStore from "@/store/authStore";
+import { toast } from "sonner";
+import { useLogin } from "@/hooks/useAuthQuery";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Github, Chrome, Disc, Loader2, ArrowLeft } from "lucide-react";
@@ -24,29 +24,31 @@ const Login = () => {
   const { user } = useAuthStore();
   const { mutate, isPending } = useLogin();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const sdk_request = searchParams.get('sdk_request');
+  const sdk_request = searchParams.get("sdk_request");
 
   // Redirect if already logged in (Only for dashboard login)
   React.useEffect(() => {
     if (user && !sdk_request) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, navigate, sdk_request]);
 
   const handleSocialLogin = (provider) => {
     // If sdk_request exists, we should probably pass it to the social login too
     const baseUrl = `${import.meta.env.VITE_BACKEND_URL}/auth/${provider}`;
-    window.location.href = sdk_request ? `${baseUrl}?sdk_request=${sdk_request}` : baseUrl;
+    window.location.href = sdk_request
+      ? `${baseUrl}?sdk_request=${sdk_request}`
+      : baseUrl;
   };
 
   const handleLocalLogin = (e) => {
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
 
@@ -55,28 +57,28 @@ const Login = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success('Login successful!');
+            toast.success("Login successful!");
             if (data.redirect_uri) {
               window.location.href = data.redirect_uri;
             } else {
-              window.location.href = '/dashboard';
+              window.location.href = "/dashboard";
             }
           }
         },
         onError: (error) => {
           const data = error.response?.data;
-          
-          if (data?.error_code === 'EMAIL_NOT_VERIFIED') {
-            toast.info(data.message || 'Email verification required');
-            const verifyPath = `/verify?email=${encodeURIComponent(email)}${sdk_request ? `&sdk_request=${sdk_request}` : ''}`;
+
+          if (data?.error_code === "EMAIL_NOT_VERIFIED") {
+            toast.info(data.message || "Email verification required");
+            const verifyPath = `/verify?email=${encodeURIComponent(email)}${sdk_request ? `&sdk_request=${sdk_request}` : ""}`;
             navigate(verifyPath);
             return;
           }
 
-          const message = data?.message || 'Login failed';
+          const message = data?.message || "Login failed";
           toast.error(message);
         },
-      }
+      },
     );
   };
 
@@ -84,7 +86,10 @@ const Login = () => {
     <VantaBackground>
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors group">
+          <Link
+            to="/"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors group"
+          >
             <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
             Back to Home
           </Link>
@@ -93,7 +98,11 @@ const Login = () => {
             <CardHeader className="space-y-2 text-center">
               <div className="flex justify-center mb-2">
                 <div className="h-12 w-12 rounded-lg border bg-card flex items-center justify-center">
-                  <img src="/assets/logo.png" alt="AuthSphere" className="h-8 w-8 object-contain dark:invert" />
+                  <img
+                    src="/assets/logo.png"
+                    alt="AuthSphere"
+                    className="h-8 w-8 object-contain dark:invert"
+                  />
                 </div>
               </div>
               <CardTitle className="text-2xl">Welcome back</CardTitle>
@@ -106,9 +115,21 @@ const Login = () => {
               {/* Social Logins */}
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'google', logo: 'https://authjs.dev/img/providers/google.svg', label: 'Google' },
-                  { id: 'github', logo: 'https://authjs.dev/img/providers/github.svg', label: 'GitHub' },
-                  { id: 'discord', logo: 'https://authjs.dev/img/providers/discord.svg', label: 'Discord' },
+                  {
+                    id: "google",
+                    logo: "https://authjs.dev/img/providers/google.svg",
+                    label: "Google",
+                  },
+                  {
+                    id: "github",
+                    logo: "https://authjs.dev/img/providers/github.svg",
+                    label: "GitHub",
+                  },
+                  {
+                    id: "discord",
+                    logo: "https://authjs.dev/img/providers/discord.svg",
+                    label: "Discord",
+                  },
                 ].map((p) => (
                   <button
                     key={p.id}
@@ -116,8 +137,14 @@ const Login = () => {
                     className="flex flex-col items-center justify-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-all gap-1 group"
                     title={`Sign in with ${p.label}`}
                   >
-                    <img src={p.logo} alt={p.label} className="h-5 w-5 grayscale group-hover:grayscale-0 transition-grayscale" />
-                    <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">{p.label}</span>
+                    <img
+                      src={p.logo}
+                      alt={p.label}
+                      className="h-5 w-5 grayscale group-hover:grayscale-0 transition-grayscale"
+                    />
+                    <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">
+                      {p.label}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -151,7 +178,10 @@ const Login = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <Link to="#" className="text-xs text-primary hover:underline">
+                    <Link
+                      to="#"
+                      className="text-xs text-primary hover:underline"
+                    >
                       Forgot password?
                     </Link>
                   </div>
@@ -165,26 +195,25 @@ const Login = () => {
                   />
                 </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isPending}
-                  >
-                    {isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </Button>
+                <Button type="submit" className="w-full" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
               </form>
 
               {/* Register Link */}
               <p className="text-center text-sm text-muted-foreground pt-2">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary font-medium hover:underline">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-primary font-medium hover:underline"
+                >
                   Sign up
                 </Link>
               </p>

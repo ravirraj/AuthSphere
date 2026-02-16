@@ -5,28 +5,16 @@ import api from "./axios";
  */
 
 export const loginLocalSDK = async (payload) => {
-  try {
-    const { data } = await api.post("/sdk/login-local", payload);
-    return data;
-  } catch (error) {
-    throw error;
-  }
+  const { data } = await api.post("/sdk/login-local", payload);
+  return data;
 };
 
 export const verifyOTPSDK = async (payload) => {
-  try {
-    const { data } = await api.post("/sdk/verify-otp", payload);
-    return data;
-  } catch (error) {
-    throw error;
-  }
+  const { data } = await api.post("/sdk/verify-otp", payload);
+  return data;
 };
 
 export const resendVerificationSDK = async (payload) => {
-  try {
-    const { data } = await api.post("/sdk/resend-verification", payload);
-    return data;
-  } catch (error) {
-    throw error;
-  }
+  const { data } = await api.post("/sdk/resend-verification", payload);
+  return data;
 };

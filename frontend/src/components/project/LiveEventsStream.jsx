@@ -8,6 +8,13 @@ const LiveEventsStream = ({ projectId }) => {
   const scrollRef = useRef(null);
   const socketRef = useRef(null);
 
+  const addEvent = (event) => {
+    setEvents((prev) => [
+      ...prev.slice(-99),
+      { ...event, id: Math.random().toString(36).substr(2, 9) },
+    ]);
+  };
+
   useEffect(() => {
     // Initialize socket connection
     const backendUrl =
@@ -93,13 +100,6 @@ const LiveEventsStream = ({ projectId }) => {
       }
     };
   }, [projectId]);
-
-  const addEvent = (event) => {
-    setEvents((prev) => [
-      ...prev.slice(-99),
-      { ...event, id: Math.random().toString(36).substr(2, 9) },
-    ]);
-  };
 
   useEffect(() => {
     if (scrollRef.current) {
