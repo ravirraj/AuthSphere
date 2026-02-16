@@ -65,6 +65,11 @@ jobs:
           echo "GOOGLE_CLIENT_ID=dummy_google_id" >> .env
           echo "GITHUB_CLIENT_ID=dummy_github_id" >> .env
 
+          echo "GITHUB_CLIENT_ID=dummy_github_id" >> .env
+
+      - name: Lint
+        run: npm run lint
+
       - name: Run Diagnostic Check
         run: npm run test:env
 
