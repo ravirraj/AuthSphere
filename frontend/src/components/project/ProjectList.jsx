@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useProjects } from "@/hooks/useProjects";
 
 import ProjectCard from "./ProjectCard";
 import CreateProjectModal from "./CreateProjectModal";
 import ProjectSkeleton from "./ProjectSkeleton";
 import EmptyState from "./EmptyState";
-
-
 
 import { Button } from "@/components/ui/button";
 
@@ -17,8 +15,6 @@ import { Separator } from "../ui/separator";
 const ProjectList = () => {
   const { data: projects = [], isLoading: loading, refetch } = useProjects();
   const [createOpen, setCreateOpen] = useState(false);
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [newProject, setNewProject] = useState(null);
 
   if (loading) {
     return (
@@ -32,20 +28,28 @@ const ProjectList = () => {
 
   return (
     <section className="space-y-6">
-
       {/* Header */}
       <div className="flex flex-col md:flex-row items-end justify-between gap-6">
         <div className="space-y-1">
-          <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tighter px-2 h-5 bg-primary/5 text-primary border-primary/20">
+          <Badge
+            variant="outline"
+            className="text-[10px] uppercase font-bold tracking-tighter px-2 h-5 bg-primary/5 text-primary border-primary/20"
+          >
             Namespace Management
           </Badge>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Project Clusters</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            Project Clusters
+          </h2>
           <p className="text-muted-foreground text-[13px] leading-relaxed">
             Manage your high-performance authentication infrastructure clusters.
           </p>
         </div>
 
-        <Button onClick={() => setCreateOpen(true)} size="sm" className="h-9 px-4 text-xs font-bold uppercase tracking-widest gap-2 shadow-md shadow-primary/20">
+        <Button
+          onClick={() => setCreateOpen(true)}
+          size="sm"
+          className="h-9 px-4 text-xs font-bold uppercase tracking-widest gap-2 shadow-md shadow-primary/20"
+        >
           <Plus className="h-3.5 w-3.5" />
           Provision Cluster
         </Button>
@@ -59,10 +63,7 @@ const ProjectList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <ProjectCard
-              key={project._id}
-              project={project}
-            />
+            <ProjectCard key={project._id} project={project} />
           ))}
 
           {/* Create CTA */}
@@ -74,10 +75,14 @@ const ProjectList = () => {
               <Plus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <div className="text-center space-y-1">
-              <p className="font-bold text-[14px] uppercase tracking-widest">Provision New</p>
-              <p className="text-[11px] text-muted-foreground italic opacity-60">Deploy a fresh identity namespace</p>
+              <p className="font-bold text-[14px] uppercase tracking-widest">
+                Provision New
+              </p>
+              <p className="text-[11px] text-muted-foreground italic opacity-60">
+                Deploy a fresh identity namespace
+              </p>
             </div>
-            
+
             {/* Industrial corner accents */}
             <div className="absolute top-2 left-2 h-2 w-2 border-t border-l border-muted group-hover:border-primary/40 transition-colors" />
             <div className="absolute top-2 right-2 h-2 w-2 border-t border-r border-muted group-hover:border-primary/40 transition-colors" />
@@ -91,10 +96,8 @@ const ProjectList = () => {
       <CreateProjectModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={(project) => {
+        onCreated={() => {
           refetch();
-          setNewProject(project);
-          setTimeout(() => setWizardOpen(true), 300);
         }}
       />
     </section>

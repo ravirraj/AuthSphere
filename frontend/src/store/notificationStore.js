@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import api from "../api/axios";
 
-const useNotificationStore = create((set, get) => ({
+const useNotificationStore = create((set) => ({
   notifications: [],
   unreadCount: 0,
   loading: false,

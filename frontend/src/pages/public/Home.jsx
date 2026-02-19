@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import useAuthStore from "@/store/authStore";
 
 // Home Components
@@ -74,92 +74,6 @@ const SYSTEM_MODULES = [
     ],
   },
 ];
-
-const API_EXAMPLES = {
-  node: `// Initialize the AuthSphere Client
-const { AuthSphere } = require('@authsphere/node-sdk');
-
-const auth = new AuthSphere({
-  projectId: process.env.AUTH_PROJECT_ID,
-  secretKey: process.env.AUTH_SECRET_KEY,
-});
-
-// Middleware to protect routes
-app.get('/api/protected', auth.middleware(), (req, res) => {
-  // Access validated user session
-  const user = req.session.user;
-  res.json({ message: \`Hello \${user.email}\` });
-});
-
-// Manually verify a token
-try {
-  const payload = await auth.verifyToken(token);
-  console.log('Valid token:', payload);
-} catch (error) {
-  console.error('Invalid token:', error.message);
-}`,
-
-  python: `# Install: pip install authsphere
-from authsphere import AuthSphereClient
-
-client = AuthSphereClient(
-    project_id="proj_123456",
-    secret_key="sk_live_abcdef"
-)
-
-# Protect a Flask route
-@app.route('/api/data')
-@client.require_auth
-def get_data(user):
-    return {"message": f"Welcome {user.email}"}
-
-# Verify token manually
-try:
-    user = client.verify_token(token_string)
-    print(user.id)
-except AuthError as e:
-    print(f"Authentication failed: {e}")`,
-
-  go: `package main
-
-import (
-    "github.com/authsphere/go-sdk"
-    "net/http"
-)
-
-func main() {
-    client := authsphere.NewClient(authsphere.Config{
-        ProjectID: "proj_123456",
-        SecretKey: "sk_live_abcdef",
-    })
-
-    http.Handle("/private", client.Middleware(http.HandlerFunc(handler)))
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-    user := authsphere.GetUser(r.Context())
-    w.Write([]byte("Hello " + user.Email))
-}`,
-
-  curl: `# Exchange Authorization Code for Token
-curl -X POST https://api.authsphere.dev/v1/oauth/token \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "grant_type": "authorization_code",
-    "client_id": "proj_123456",
-    "client_secret": "sec_abcdef",
-    "code": "auth_code_xyz",
-    "redirect_uri": "https://myapp.com/callback"
-  }'
-
-# Response
-{
-  "access_token": "eyJhbGci...",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "refresh_token": "rt_98765..."
-}`,
-};
 
 const ERROR_CODES = [
   {

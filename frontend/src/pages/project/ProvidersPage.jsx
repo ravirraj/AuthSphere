@@ -75,7 +75,7 @@ const ProvidersPage = ({ embedded = false, onBack, onUpdated }) => {
         if (configRes.success) {
           setBackendConfig(configRes.data);
         }
-      } catch (err) {
+      } catch {
         toast.error("Failed to fetch project details");
       } finally {
         setLoading(false);
@@ -129,7 +129,7 @@ const ProvidersPage = ({ embedded = false, onBack, onUpdated }) => {
         toast.success("Identity Catalog synchronized");
         if (onUpdated) onUpdated();
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update providers");
     } finally {
       setSaving(false);

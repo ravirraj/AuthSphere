@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // eslint-disable-line no-unused-vars
 import {
   Mail,
   Lock,
@@ -28,12 +28,12 @@ export const StepperSignup = () => {
 
   const isEmailValid = useMemo(
     () => /\S+@\S+\.\S+/.test(form.email),
-    [form.email]
+    [form.email],
   );
 
   const isPasswordStrong = useMemo(
     () => form.password.length >= 10,
-    [form.password]
+    [form.password],
   );
 
   const canContinue = () => {
@@ -65,22 +65,19 @@ export const StepperSignup = () => {
       hint: !form.email
         ? "Enter a valid email address"
         : isEmailValid
-        ? "Looks good"
-        : "That email doesn’t look right",
+          ? "Looks good"
+          : "That email doesn’t look right",
     },
     2: {
       title:
-        mode === "signup"
-          ? "Choose your display name"
-          : "Enter your password",
+        mode === "signup" ? "Choose your display name" : "Enter your password",
       subtitle:
         mode === "signup"
           ? "This will appear on your profile and workspace."
           : "Make sure no one is watching 👀",
       field: mode === "signup" ? "name" : "password",
       type: mode === "signup" ? "text" : "password",
-      placeholder:
-        mode === "signup" ? "John Doe" : "Your secure password",
+      placeholder: mode === "signup" ? "John Doe" : "Your secure password",
       icon: mode === "signup" ? <User size={18} /> : <Lock size={18} />,
     },
     3: {
@@ -134,9 +131,7 @@ export const StepperSignup = () => {
                     <div
                       key={i}
                       className={`h-1 rounded-full transition-all ${
-                        i + 1 <= step
-                          ? "bg-indigo-600 w-8"
-                          : "bg-slate-200 w-2"
+                        i + 1 <= step ? "bg-indigo-600 w-8" : "bg-slate-200 w-2"
                       }`}
                     />
                   ))}
@@ -173,15 +168,17 @@ export const StepperSignup = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
                       >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
                       </button>
                     )}
                   </div>
 
                   {steps[step].hint && (
-                    <p className="text-xs text-slate-400">
-                      {steps[step].hint}
-                    </p>
+                    <p className="text-xs text-slate-400">{steps[step].hint}</p>
                   )}
 
                   <button

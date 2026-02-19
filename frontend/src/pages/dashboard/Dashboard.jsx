@@ -524,7 +524,7 @@ const Dashboard = () => {
         <CreateProjectModal
           open={createOpen}
           onClose={() => setCreateOpen(false)}
-          onCreated={(project) => {
+          onCreated={() => {
             setCreateOpen(false);
             fetchStats();
             setActiveTab("projects");
