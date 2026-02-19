@@ -78,7 +78,7 @@ class RedisService {
             );
             try {
               this.client.disconnect();
-            } catch (e) {
+            } catch (_e) {
               /* ignore */
             }
             this.client = new InMemoryRedis();

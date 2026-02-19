@@ -99,7 +99,7 @@ export async function googleLogin(req, res) {
   try {
     const context = getContextFromReq(req);
     res.redirect(getGoogleAuthURL(context));
-  } catch (err) {
+  } catch (_err) {
     res.status(500).send("Could not start Google login");
   }
 }
@@ -127,7 +127,7 @@ export async function googleCallback(req, res) {
       },
       context,
     );
-  } catch (err) {
+  } catch (_err) {
     res.status(500).send("Google authentication failed");
   }
 }
@@ -139,7 +139,7 @@ export async function githubLogin(req, res) {
   try {
     const context = getContextFromReq(req);
     res.redirect(getGithubAuthURL(context));
-  } catch (err) {
+  } catch (_err) {
     res.status(500).send("Could not start GitHub login");
   }
 }
@@ -167,7 +167,7 @@ export async function githubCallback(req, res) {
       },
       context,
     );
-  } catch (err) {
+  } catch (_err) {
     res.status(500).send("GitHub authentication failed");
   }
 }
