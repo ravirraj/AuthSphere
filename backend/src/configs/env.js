@@ -36,9 +36,15 @@ const _conf = {
   redisUrl: String(process.env.REDIS_URL || "redis://localhost:6379").trim(),
 
   // Google
-  GOOGLE_CLIENT_ID: String(process.env.GOOGLE_CLIENT_ID || "").trim(),
-  GOOGLE_CLIENT_SECRET: String(process.env.GOOGLE_CLIENT_SECRET || "").trim(),
-  GOOGLE_REDIRECT_URI: String(process.env.GOOGLE_REDIRECT_URI || "").trim(),
+  GOOGLE_CLIENT_ID: String(process.env.GOOGLE_CLIENT_ID || "")
+    .trim()
+    .replace(/^["'](.+)["']$/, "$1"),
+  GOOGLE_CLIENT_SECRET: String(process.env.GOOGLE_CLIENT_SECRET || "")
+    .trim()
+    .replace(/^["'](.+)["']$/, "$1"),
+  GOOGLE_REDIRECT_URI: String(process.env.GOOGLE_REDIRECT_URI || "")
+    .trim()
+    .replace(/^["'](.+)["']$/, "$1"),
 
   // GitHub
   GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,

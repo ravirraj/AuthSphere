@@ -53,11 +53,17 @@ export async function getGoogleUser(code) {
       client_id: conf.GOOGLE_CLIENT_ID,
       redirect_uri: conf.GOOGLE_REDIRECT_URI,
       code_received: !!code,
+      secret_prefix: conf.GOOGLE_CLIENT_SECRET
+        ? conf.GOOGLE_CLIENT_SECRET.substring(0, 6) + "..."
+        : "MISSING",
+      secret_suffix: conf.GOOGLE_CLIENT_SECRET
+        ? "..." + conf.GOOGLE_CLIENT_SECRET.slice(-4)
+        : "MISSING",
     });
 
     const tokenRes = await axios.post(
       "https://oauth2.googleapis.com/token",
-      params.toString(),
+      params,
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
