@@ -42,6 +42,11 @@ export async function getGoogleUser(code) {
 
   try {
     // Exchange code for tokens (application/x-www-form-urlencoded required)
+    console.log("Exchanging Google code for tokens...", {
+      client_id: conf.GOOGLE_CLIENT_ID ? "PRESENT" : "MISSING",
+      redirect_uri: conf.GOOGLE_REDIRECT_URI,
+    });
+
     const tokenRes = await axios.post(
       "https://oauth2.googleapis.com/token",
       qs.stringify({

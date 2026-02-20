@@ -17,6 +17,8 @@ import homeHandler from "./home.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // --- Performance & Traceability ---
 app.use(compression());
 app.use((req, res, next) => {
