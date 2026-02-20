@@ -41,21 +41,23 @@ export async function getGoogleUser(code) {
   if (!code) throw new Error("No code provided from Google callback");
 
   try {
-    // Exchange code for tokens (application/x-www-form-urlencoded required)
-    console.log("Exchanging Google code for tokens...", {
-      client_id: conf.GOOGLE_CLIENT_ID ? "PRESENT" : "MISSING",
+    // Exchange code for tokens
+    const params = new URLSearchParams();
+    params.append("client_id", conf.GOOGLE_CLIENT_ID);
+    params.append("client_secret", conf.GOOGLE_CLIENT_SECRET);
+    params.append("code", code);
+    params.append("redirect_uri", conf.GOOGLE_REDIRECT_URI);
+    params.append("grant_type", "authorization_code");
+
+    console.log("Exchanging Google code with:", {
+      client_id: conf.GOOGLE_CLIENT_ID,
       redirect_uri: conf.GOOGLE_REDIRECT_URI,
+      code_received: !!code,
     });
 
     const tokenRes = await axios.post(
       "https://oauth2.googleapis.com/token",
-      qs.stringify({
-        client_id: conf.GOOGLE_CLIENT_ID,
-        client_secret: conf.GOOGLE_CLIENT_SECRET,
-        code,
-        redirect_uri: conf.GOOGLE_REDIRECT_URI,
-        grant_type: "authorization_code",
-      }),
+      params.toString(),
       {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
