@@ -107,6 +107,10 @@ export async function googleLogin(req, res) {
 export async function googleCallback(req, res) {
   try {
     const { code, state } = req.query;
+    console.log("Google callback received:", {
+      state,
+      code: code ? "EXISTS" : "MISSING",
+    });
     if (!code) return res.status(400).send("Missing authorization code");
 
     let context = { cli: false, sdkRequest: null };
@@ -127,7 +131,8 @@ export async function googleCallback(req, res) {
       },
       context,
     );
-  } catch (_err) {
+  } catch (err) {
+    console.error("Google Callback Error:", err);
     res.status(500).send("Google authentication failed");
   }
 }
@@ -167,7 +172,8 @@ export async function githubCallback(req, res) {
       },
       context,
     );
-  } catch (_err) {
+  } catch (err) {
+    console.error("GitHub Callback Error:", err);
     res.status(500).send("GitHub authentication failed");
   }
 }
@@ -208,6 +214,7 @@ export async function discordCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Discord Callback Error:", err);
     res.status(500).send("Discord authentication failed");
   }
 }
@@ -244,6 +251,7 @@ export async function linkedinCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("LinkedIn Callback Error:", err);
     res.status(500).send("LinkedIn authentication failed");
   }
 }
@@ -277,6 +285,7 @@ export async function gitlabCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("GitLab Callback Error:", err);
     res.status(500).send("GitLab authentication failed");
   }
 }
@@ -310,6 +319,7 @@ export async function twitchCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Twitch Callback Error:", err);
     res.status(500).send("Twitch authentication failed");
   }
 }
@@ -343,6 +353,7 @@ export async function bitbucketCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Bitbucket Callback Error:", err);
     res.status(500).send("Bitbucket authentication failed");
   }
 }
@@ -376,6 +387,7 @@ export async function microsoftCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Microsoft Callback Error:", err);
     res.status(500).send("Microsoft authentication failed");
   }
 }

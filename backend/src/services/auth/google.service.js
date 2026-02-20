@@ -32,7 +32,6 @@ export function getGoogleAuthURL(context = { type: "dev" }) {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-
 /**
  * Exchanges authorization code for access token and fetches user info
  * @param {string} code - Authorization code from Google
@@ -56,7 +55,7 @@ export async function getGoogleUser(code) {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-      }
+      },
     );
 
     if (!tokenRes.data.access_token) {
@@ -73,12 +72,17 @@ export async function getGoogleUser(code) {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
-      }
+      },
     );
 
-    if (!userRes.data || !userRes.data.sub) {
-      console.error("Invalid user data from Google:", userRes.data);
-      throw new Error("Failed to get valid user info from Google");
+    if (!userRes.data || !userRes.data.sub || !userRes.data.email) {
+      console.error(
+        "Invalid user data from Google (missing sub or email):",
+        userRes.data,
+      );
+      throw new Error(
+        "Failed to get valid user info from Google (missing email)",
+      );
     }
 
     return userRes.data; // { sub, email, name, picture }

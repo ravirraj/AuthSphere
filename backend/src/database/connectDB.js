@@ -10,7 +10,9 @@ const connectDB = async () => {
   try {
     if (mongoose.connection.readyState === 0) {
       logger.info("Connecting to MongoDB Atlas...");
-      const conn = await mongoose.connect(conf.mongodbUri);
+      const conn = await mongoose.connect(conf.mongodbUri, {
+        serverSelectionTimeoutMS: 5000,
+      });
 
       logger.info(`MongoDB connected to host: ${conn.connection.host}`);
       logger.info(`Database: ${conn.connection.name}`);
