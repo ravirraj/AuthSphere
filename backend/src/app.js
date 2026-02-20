@@ -46,6 +46,32 @@ app.use((req, res, next) => {
 const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream }));
 
+// --- CORS Configuration ---
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow all origins if CORS_ORIGIN is '*' or not in production
+      if (
+        !origin ||
+        conf.corsOrigin === "*" ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+
+      const allowedOrigins = conf.corsOrigin.split(",").map((o) => o.trim());
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  }),
+);
+
 // --- Standard Middleware (Parser) ---
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
@@ -75,28 +101,6 @@ app.use("/api", globalLimiter);
 
 // --- Swagger Documentation ---
 swaggerDocs(app);
-
-// --- Standard Response Middleware (CORS) ---
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const allowedOrigins = conf.corsOrigin.split(",");
-      if (
-        allowedOrigins.includes(origin) ||
-        allowedOrigins.includes("*") ||
-        process.env.NODE_ENV !== "production"
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  }),
-);
 
 // --- Home & Health Check ---
 app.get("/", homeHandler);
