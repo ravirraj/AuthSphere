@@ -51,9 +51,13 @@ Identity is maintained via secure storage, with the `getUser()` hook providing a
    Update your SDK initialization in `src/App.jsx` with your project's Public Key:
 
    ```javascript
+   import AuthSphere from "@authspherejs/sdk";
+
    AuthSphere.initAuth({
-     publicKey: "YOUR_KEY_HERE",
-     baseUrl: "https://auth-sphere-6s2v.vercel.app",
+     publicKey: "YOUR_PUBLIC_KEY",
+     projectId: "YOUR_PROJECT_ID",
+     redirectUri: window.location.origin + "/callback",
+     baseUrl: "https://auth-sphere-6s2v.vercel.app", // or http://localhost:8000 locally
    });
    ```
 

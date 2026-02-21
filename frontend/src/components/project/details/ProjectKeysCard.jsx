@@ -228,7 +228,7 @@ const ProjectKeysCard = ({ project, onKeysRotated }) => {
 
           <Terminal
             copyable
-            codeToCopy={`import { initAuth } from "@authspherejs/sdk";\n\nconst auth = initAuth({\n  publicKey: "${project.publicKey}",\n  projectId: "${project._id}",\n  redirectUri: "${project.redirectUris?.[0] || "YOUR_CALLBACK_URL"}"\n});`}
+            codeToCopy={`import AuthSphere from "@authspherejs/sdk";\n\nAuthSphere.initAuth({\n  publicKey: "${project.publicKey}",\n  projectId: "${project._id}",\n  redirectUri: window.location.origin + "/callback",\n  baseUrl: "https://auth-sphere-6s2v.vercel.app"\n});`}
             className="max-w-none bg-black/80 backdrop-blur-xl border-white/10 shadow-2xl ring-1 ring-white/5"
             startOnView={false}
           >
@@ -242,12 +242,12 @@ const ProjectKeysCard = ({ project, onKeysRotated }) => {
 
             <AnimatedSpan className="text-slate-300">
               <pre className="font-mono text-[13px] leading-relaxed">
-                <span className="text-purple-400">import</span> {`{ initAuth }`}{" "}
+                <span className="text-purple-400">import</span>{" "}
+                <span className="text-blue-300">AuthSphere</span>{" "}
                 <span className="text-purple-400">from</span>{" "}
                 <span className="text-emerald-400">"@authspherejs/sdk"</span>;
                 {"\n\n"}
-                <span className="text-purple-400">const</span>{" "}
-                <span className="text-blue-300">auth</span> ={" "}
+                <span className="text-blue-300">AuthSphere</span>.
                 <span className="text-yellow-300">initAuth</span>({`{`}
                 {"\n  "}publicKey:{" "}
                 <span className="text-emerald-400">"{project.publicKey}"</span>,
@@ -255,9 +255,9 @@ const ProjectKeysCard = ({ project, onKeysRotated }) => {
                 <span className="text-emerald-400">"{project._id}"</span>,
                 {"\n  "}redirectUri:{" "}
                 <span className="text-emerald-400">
-                  "{project.redirectUris?.[0] || "YOUR_CALLBACK_URL"}"
+                  "window.location.origin + \'/callback\'"
                 </span>
-                {`\n}`});
+                ,{`\n}`});
               </pre>
             </AnimatedSpan>
           </Terminal>

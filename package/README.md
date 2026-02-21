@@ -76,8 +76,9 @@ import AuthSphere from "@authspherejs/sdk";
 
 AuthSphere.initAuth({
   publicKey: "YOUR_PROJECT_PUB_KEY", // Available in your Command Center
-  redirectUri: "https://yourapp.com/callback", // Target for post-auth return
-  baseUrl: "https://auth-sphere-6s2v.vercel.app", // The production engine
+  projectId: "YOUR_PROJECT_ID", // Available in your Command Center
+  redirectUri: window.location.origin + "/callback", // Target for post-auth return
+  baseUrl: "https://auth-sphere-6s2v.vercel.app", // The production engine URL
 });
 ```
 
@@ -87,6 +88,7 @@ Trigger a social login with a single line. The SDK generates the cryptographic s
 
 ```typescript
 // Support for 'google', 'github', 'discord'
+AuthSphere.redirectToLogin("google");
 AuthSphere.redirectToLogin("github");
 ```
 
@@ -94,34 +96,73 @@ AuthSphere.redirectToLogin("github");
 
 Inside your callback route (e.g., `/callback`), exchange the transient authorization code for a high-entropy session.
 
-```typescript
-async function resolveIdentity() {
-  try {
-    // Validates PKCE parameters and establishes the session
-    const session = await AuthSphere.handleAuthCallback();
-    console.log("Identity Established:", session.user.email);
-    window.location.href = "/dashboard";
-  } catch (err) {
-    console.error("Handshake Resolution Failed:", err.message);
-  }
-}
+```tsx
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
+const Callback = () => {
+  const navigate = useNavigate();
+  const processed = useRef(false); // Guard against double-execution in React Strict Mode
+
+  useEffect(() => {
+    if (processed.current) return;
+    processed.current = true;
+
+    // Validates PKCE parameters and exchanges code for a secure session
+    AuthSphere.handleAuthCallback()
+      .then(() => navigate("/dashboard"))
+      .catch((err) => console.error("Handshake Failed:", err.message));
+  }, [navigate]);
+
+  return <div>Authenticating...</div>;
+};
 ```
 
 ### **4️⃣ Handle Local Credentials**
 
 For applications requiring custom signup flows with integrated verification cycles.
 
-```typescript
-// Initial Attempt
-try {
-  const session = await AuthSphere.loginLocal({ email, password });
-} catch (err) {
-  if (err.error_code === "EMAIL_NOT_VERIFIED") {
-    // The 'sdk_request' ID preserves the original context for the OTP cycle
-    const { sdk_request } = err.metadata;
-    router.push(`/verify?req=${sdk_request}`);
+```tsx
+import AuthSphere, { AuthError } from "@authspherejs/sdk";
+
+// Email/Password Login
+const handleLogin = async ({ email, password }) => {
+  try {
+    const res = await AuthSphere.loginLocal({ email, password });
+    if (res && res.redirect) {
+      window.location.href = res.redirect;
+    }
+  } catch (err) {
+    if (err instanceof AuthError && err.message.includes("not verified")) {
+      // sdk_request preserves the original OAuth context across redirects
+      navigate(`/verify-otp?email=${email}&sdk_request=${err.sdk_request}`);
+    } else {
+      setError(err.message);
+    }
   }
-}
+};
+
+// Registration
+const handleRegister = async ({ email, password, username }) => {
+  await AuthSphere.register({ email, password, username });
+  navigate(`/verify-otp?email=${email}`);
+};
+
+// OTP Verification
+const handleVerifyOTP = async ({ email, otp, sdk_request }) => {
+  const res = await AuthSphere.verifyOTP({ email, otp, sdk_request });
+  if (res && res.redirect) {
+    window.location.href = res.redirect;
+  } else {
+    navigate("/dashboard");
+  }
+};
+
+// Logout
+const handleLogout = () => {
+  AuthSphere.logout();
+  navigate("/login");
+};
 ```
 
 ---
@@ -172,7 +213,8 @@ The AuthSphere SDK is built to strictly adhere to the **IETF Best Current Practi
 
 | Parameter     | Type      | Required | Description                                              |
 | :------------ | :-------- | :------: | :------------------------------------------------------- |
-| `publicKey`   | `string`  | **Yes**  | Your project's Identification Key from the dashboard.    |
+| `publicKey`   | `string`  | **Yes**  | Your project's public key from the Command Center.       |
+| `projectId`   | `string`  | **Yes**  | Your project's unique ID from the Command Center.        |
 | `redirectUri` | `string`  | **Yes**  | The URI your app redirects back to after authentication. |
 | `baseUrl`     | `string`  |    No    | Your API server URL (Default: Production).               |
 | `storage`     | `Storage` |    No    | Persistence layer (Default: `localStorage`).             |
