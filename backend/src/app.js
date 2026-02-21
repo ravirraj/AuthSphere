@@ -49,24 +49,40 @@ const morganFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
 app.use(morgan(morganFormat, { stream }));
 
 // --- CORS Configuration ---
+// Build an explicit allowlist from multiple env sources so that the
+// frontend is always permitted, even if CORS_ORIGIN is misconfigured.
+const buildAllowedOrigins = () => {
+  const raw = [
+    ...(conf.corsOrigin ? conf.corsOrigin.split(",") : []),
+    conf.frontendUrl,
+    conf.cliUrl,
+  ]
+    .map((o) => (o || "").trim())
+    .filter(Boolean);
+  return [...new Set(raw)]; // deduplicate
+};
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins if CORS_ORIGIN is '*' or not in production
-      if (
-        !origin ||
-        conf.corsOrigin === "*" ||
-        process.env.NODE_ENV !== "production"
-      ) {
+      // No origin = server-to-server / curl / mobile app — always allow
+      if (!origin) return callback(null, true);
+
+      // Wildcard or non-production: allow everything
+      if (conf.corsOrigin === "*" || process.env.NODE_ENV !== "production") {
         return callback(null, true);
       }
 
-      const allowedOrigins = conf.corsOrigin.split(",").map((o) => o.trim());
+      const allowedOrigins = buildAllowedOrigins();
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+        return callback(null, true);
       }
+
+      // Log blocked origin to help diagnose misconfiguration
+      logger.warn(
+        `CORS blocked origin: "${origin}". Allowed: [${allowedOrigins.join(", ")}]`,
+      );
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
