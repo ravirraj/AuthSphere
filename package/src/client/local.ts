@@ -61,7 +61,9 @@ export async function loginLocal(params: { email: string; password: string }) {
         throw new AuthError(errorData.error_description || "Auth initiation failed");
     }
 
-    const { requestId } = await authResponse.json();
+    const authJson = await authResponse.json();
+    // Backend wraps as {success, message, data: {requestId}} — unwrap if needed
+    const { requestId } = (authJson.data || authJson);
 
     // 2. Perform the actual login
     const loginResponse = await fetch(`${options.baseUrl}/sdk/login-local`, {

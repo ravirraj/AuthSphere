@@ -3,7 +3,7 @@
 import { handleAuthCallback } from "./client/callback";
 import { redirectToLogin } from "./client/redirect";
 import { initAuth } from "./config/options";
-import { getToken, getUser, isAuthenticated, logout } from "./client/session";
+import { getToken, getUser, isAuthenticated, logout, ensureAuthenticated } from "./client/session";
 import { fetchWithAuth } from "./client/api";
 import { AuthError } from "./utils/errors";
 import { register, loginLocal, verifyOTP, resendVerification } from "./client/local";
@@ -30,6 +30,7 @@ export {
   isAuthenticated,
   logout,
   getToken,
+  ensureAuthenticated,
 } from "./client/session";
 
 // =======================
@@ -63,6 +64,7 @@ const AuthSphere = {
   isAuthenticated,
   logout,
   getToken,
+  ensureAuthenticated,
   fetchWithAuth,
   AuthError,
   register,

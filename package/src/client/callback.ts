@@ -85,26 +85,32 @@ export async function handleAuthCallback(): Promise<AuthResponse | null> {
     }
 
     // ✅ VALIDATE RESPONSE STRUCTURE
-    if (!data || !data.accessToken || !data.user) {
+    // Backend wraps response as {success, message, data: {accessToken, ...}}
+    // Unwrap the envelope if present, fall back to root-level for compatibility.
+    const tokenData: AuthResponse = (data && (data as any).success && (data as any).data)
+      ? (data as any).data
+      : data;
+
+    if (!tokenData || !tokenData.accessToken || !tokenData.user) {
       console.error("Invalid token response:", data);
       throw new AuthError("Invalid token response from server");
     }
 
     // ✅ STORE TOKENS AND USER
-    setAccessToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
-    setUser(data.user);
+    setAccessToken(tokenData.accessToken);
+    setRefreshToken(tokenData.refreshToken);
+    setUser(tokenData.user);
 
     // Use expiresAt from server or calculate default
-    const expiresAt = data.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
+    const expiresAt = tokenData.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
     setExpiresAt(expiresAt);
 
-    console.log("✓ Authentication successful:", data.user.email);
+    console.log("✓ Authentication successful:", tokenData.user.email);
 
     // ✅ CLEAN URL (REMOVE QUERY PARAMS)
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    return data;
+    return tokenData;
   } catch (err) {
     console.error("Token exchange error:", err);
     if (err instanceof AuthError) throw err;

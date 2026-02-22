@@ -32,7 +32,10 @@ import {
 } from "../services/auth/microsoft.service.js";
 import authService from "../services/auth/auth.service.js";
 import { handleSDKCallback } from "./sdk.controller.js";
+import sdkService from "../services/auth/sdk.service.js";
 import { conf } from "../configs/env.js";
+import redisService from "../services/core/redis.service.js";
+import crypto from "crypto";
 
 /* ============================================================
    SOCIAL AUTH HANDLER (TRANSPORT LAYER)
@@ -105,18 +108,47 @@ export async function googleLogin(req, res) {
 }
 
 export async function googleCallback(req, res) {
+  const { code, state } = req.query;
+
+  // ── Guard: missing code ──────────────────────────────────────────────
+  if (!code) {
+    return res.redirect(`${conf.frontendUrl}/auth/callback?error=missing_code`);
+  }
+
+  // Parse context from state BEFORE the try block so we can use it in catch
+  let context = { cli: false, sdkRequest: null };
+  if (state === "cli") context.cli = true;
+  if (state?.startsWith("sdk:")) context.sdkRequest = state.split(":")[1];
+
+  // Pre-resolve the developer's redirectUri so errors go to the RIGHT place.
+  // For SDK flows the error must redirect to developer's app, not AuthSphere.
+  let sdkErrorBase = null;
+  if (context.sdkRequest) {
+    try {
+      const authReq = await sdkService.getAuthRequest(context.sdkRequest);
+      if (authReq?.redirectUri) {
+        const u = new URL(authReq.redirectUri);
+        sdkErrorBase = u.origin + u.pathname; // strip existing query params
+      }
+    } catch (_e) {
+      /* fall back to AuthSphere */
+    }
+  }
+
+  /** Route errors to the correct destination (developer app vs AuthSphere) */
+  const redirectError = (errorCode) => {
+    if (sdkErrorBase) {
+      return res.redirect(`${sdkErrorBase}?error=${errorCode}`);
+    }
+    return res.redirect(`${conf.frontendUrl}/login?error=${errorCode}`);
+  };
+
   try {
-    const { code, state } = req.query;
-    if (!code) return res.status(400).send("Missing authorization code");
-
-    let context = { cli: false, sdkRequest: null };
-    if (state === "cli") context.cli = true;
-    if (state && state.startsWith("sdk:"))
-      context.sdkRequest = state.split(":")[1];
-
+    // Exchange code → google user (dedup guard lives inside getGoogleUser)
     const googleUser = await getGoogleUser(code);
-    await processSocialAuth(
-      res,
+
+    // Run social auth logic (creates/finds user, generates tokens)
+    const result = await authService.handleSocialAuth(
       req,
       {
         email: googleUser.email,
@@ -127,8 +159,126 @@ export async function googleCallback(req, res) {
       },
       context,
     );
-  } catch (_err) {
-    res.status(500).send("Google authentication failed");
+
+    // ── SDK Flow ────────────────────────────────────────────────────
+    if (result.endUser) {
+      req.query.sdk_request = result.sdkRequestId;
+      return await handleSDKCallback(
+        req,
+        res,
+        result.endUser,
+        result.provider,
+        result.sdkRequestId,
+      );
+    }
+
+    // ── CLI Flow ────────────────────────────────────────────────────
+    const { developer, accessToken, refreshToken, cli } = result;
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+
+    if (cli === "true" || cli === true) {
+      res.cookie("accessToken", accessToken, cookieOptions);
+      res.cookie("refreshToken", refreshToken, cookieOptions);
+      try {
+        await fetch(
+          `${conf.cliUrl}/cli-update?name=${developer.username}&email=${developer.email}&id=${developer._id}&provider=Google`,
+        );
+      } catch (cliErr) {
+        console.error("[Google OAuth] CLI callback failed:", cliErr.message);
+      }
+      return res.send("<script>window.close();</script>");
+    }
+
+    // ── Standard Developer Flow: Bridge Token Pattern ───────────────────
+    // Instead of setting cookies here and redirecting, we:
+    // 1. Set the cookies immediately (they travel with the redirect)
+    // 2. Also store a short-lived bridge token in Redis so the frontend
+    //    can verify the session was established (useful for SPAs)
+    // 3. Redirect immediately — the callback URL NEVER stays in the browser
+    res.cookie("accessToken", accessToken, cookieOptions);
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    // Generate a short-lived bridge token for the frontend to optionally verify
+    const bridgeToken = crypto.randomBytes(32).toString("hex");
+    try {
+      await redisService.client?.set(
+        `oauth:bridge:${bridgeToken}`,
+        JSON.stringify({ userId: developer._id, provider: "Google" }),
+        "EX",
+        60, // 60 second claim window
+      );
+    } catch (_e) {
+      // Non-fatal: cookies are already set; bridge token is supplementary
+    }
+
+    // Immediately redirect — callback URL must never linger in the browser
+    return res.redirect(
+      `${conf.frontendUrl}/auth/callback?token=${bridgeToken}`,
+    );
+  } catch (err) {
+    console.error("[Google OAuth] Callback error:", err.message);
+
+    switch (err.message) {
+      case "DUPLICATE_CALLBACK":
+        // A concurrent request already handled this — close silently
+        return res.status(200).send("<script>window.close();</script>");
+
+      case "INVALID_GRANT":
+        return redirectError("session_expired");
+
+      case "USERINFO_FETCH_FAILED":
+      case "USERINFO_INVALID":
+      case "TOKEN_EXCHANGE_FAILED":
+        return redirectError("google_auth_failed");
+
+      case "Invalid or expired SDK request":
+        return redirectError("session_expired");
+
+      default:
+        return redirectError("auth_failed");
+    }
+  }
+}
+
+/**
+ * Frontend calls this after being redirected to /auth/callback?token=...
+ * It validates the bridge token and returns the authenticated user info.
+ * Cookies were already set during the callback redirect above.
+ *
+ * GET /auth/session/:token
+ */
+export async function exchangeSession(req, res) {
+  const { token } = req.params;
+  if (!token) return res.status(400).json({ error: "Missing session token" });
+
+  try {
+    const key = `oauth:bridge:${token}`;
+    const raw = await redisService.client?.get(key);
+    if (!raw) {
+      return res
+        .status(400)
+        .json({ error: "Session token expired or invalid" });
+    }
+
+    // One-time use: delete the bridge token immediately
+    await redisService.client?.del(key);
+
+    const { userId, provider } = JSON.parse(raw);
+    return res.status(200).json({
+      success: true,
+      message: "Authentication successful",
+      provider,
+      userId,
+    });
+  } catch (err) {
+    console.error("[Auth] Session exchange error:", err.message);
+    return res.status(500).json({ error: "Failed to exchange session token" });
   }
 }
 
@@ -167,7 +317,8 @@ export async function githubCallback(req, res) {
       },
       context,
     );
-  } catch (_err) {
+  } catch (err) {
+    console.error("GitHub Callback Error:", err);
     res.status(500).send("GitHub authentication failed");
   }
 }
@@ -208,6 +359,7 @@ export async function discordCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Discord Callback Error:", err);
     res.status(500).send("Discord authentication failed");
   }
 }
@@ -244,6 +396,7 @@ export async function linkedinCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("LinkedIn Callback Error:", err);
     res.status(500).send("LinkedIn authentication failed");
   }
 }
@@ -277,6 +430,7 @@ export async function gitlabCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("GitLab Callback Error:", err);
     res.status(500).send("GitLab authentication failed");
   }
 }
@@ -310,6 +464,7 @@ export async function twitchCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Twitch Callback Error:", err);
     res.status(500).send("Twitch authentication failed");
   }
 }
@@ -343,6 +498,7 @@ export async function bitbucketCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Bitbucket Callback Error:", err);
     res.status(500).send("Bitbucket authentication failed");
   }
 }
@@ -376,6 +532,7 @@ export async function microsoftCallback(req, res) {
       context,
     );
   } catch (err) {
+    console.error("Microsoft Callback Error:", err);
     res.status(500).send("Microsoft authentication failed");
   }
 }

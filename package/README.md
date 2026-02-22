@@ -69,59 +69,105 @@ yarn add @authspherejs/sdk
 
 ### **1️⃣ Initialize the Global Handshake**
 
-Configure the AuthSphere singleton at the very root of your application (e.g., `main.ts` or `index.js`).
+Configure the AuthSphere singleton at the very root of your application (e.g., `main.ts` or `App.jsx`).
 
 ```typescript
 import AuthSphere from "@authspherejs/sdk";
 
 AuthSphere.initAuth({
-  publicKey: "YOUR_PROJECT_PUB_KEY", // Available in your Command Center
-  redirectUri: "https://yourapp.com/callback", // Target for post-auth return
-  baseUrl: "https://auth-sphere-6s2v.vercel.app", // The production engine
+  publicKey: "YOUR_PROJECT_PUB_KEY", // Available in your Dashboard
+  projectId: "YOUR_PROJECT_ID", // Available in your Dashboard
+  redirectUri: window.location.origin + "/callback",
+  baseUrl: "https://auth-sphere-6s2v.vercel.app",
 });
 ```
 
 ### **2️⃣ Initiate Identity Handshake**
 
-Trigger a social login with a single line. The SDK generates the cryptographic state and performs the redirect.
+Trigger a social login or local credentials flow.
 
 ```typescript
-// Support for 'google', 'github', 'discord'
-AuthSphere.redirectToLogin("github");
+// Social Login (Google, GitHub, Discord)
+AuthSphere.redirectToLogin("google");
+
+// Local Login with error handling for unverified users
+const onLogin = async (credentials) => {
+  try {
+    const res = await AuthSphere.loginLocal(credentials);
+    if (res?.redirect) window.location.href = res.redirect;
+  } catch (err) {
+    if (err instanceof AuthError && err.message.includes("not verified")) {
+      // Redirect to OTP verification if email isn't verified yet
+      navigate(
+        `/verify-otp?email=${credentials.email}&sdk_request=${err.sdk_request}`,
+      );
+    }
+  }
+};
 ```
 
 ### **3️⃣ Resolve the Handshake**
 
 Inside your callback route (e.g., `/callback`), exchange the transient authorization code for a high-entropy session.
 
-```typescript
-async function resolveIdentity() {
-  try {
-    // Validates PKCE parameters and establishes the session
-    const session = await AuthSphere.handleAuthCallback();
-    console.log("Identity Established:", session.user.email);
-    window.location.href = "/dashboard";
-  } catch (err) {
-    console.error("Handshake Resolution Failed:", err.message);
-  }
-}
+```tsx
+import { useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AuthSphere from "@authspherejs/sdk";
+
+const Callback = () => {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const processed = useRef(false);
+
+  useEffect(() => {
+    if (processed.current) return;
+    processed.current = true;
+
+    // Handle verification requirement from social providers
+    if (params.get("error") === "email_not_verified") {
+      const email = params.get("email");
+      const sdkReq = params.get("sdk_request");
+      navigate(
+        `/verify-otp?email=${email}${sdkReq ? `&sdk_request=${sdkReq}` : ""}`,
+      );
+      return;
+    }
+
+    AuthSphere.handleAuthCallback()
+      .then(() => navigate("/dashboard"))
+      .catch((err) => console.error("Handshake Failed:", err));
+  }, [navigate, params]);
+
+  return <div>Authenticating...</div>;
+};
 ```
 
-### **4️⃣ Handle Local Credentials**
+### **4️⃣ Identity Challenges (OTP & Registration)**
 
-For applications requiring custom signup flows with integrated verification cycles.
+For flows requiring Email/Password verification cycles.
 
-```typescript
-// Initial Attempt
-try {
-  const session = await AuthSphere.loginLocal({ email, password });
-} catch (err) {
-  if (err.error_code === "EMAIL_NOT_VERIFIED") {
-    // The 'sdk_request' ID preserves the original context for the OTP cycle
-    const { sdk_request } = err.metadata;
-    router.push(`/verify?req=${sdk_request}`);
+```tsx
+// Registration
+const onSignUp = async (data) => {
+  await AuthSphere.register(data);
+  navigate(`/verify-otp?email=${data.email}`);
+};
+
+// OTP Verification
+const onVerify = async (otpValue) => {
+  const res = await AuthSphere.verifyOTP({
+    email,
+    otp: otpValue,
+    sdk_request: sdkReq,
+  });
+
+  if (res?.redirect) {
+    window.location.href = res.redirect;
+  } else {
+    navigate(sdkReq ? "/dashboard" : "/login");
   }
-}
+};
 ```
 
 ---
@@ -172,7 +218,8 @@ The AuthSphere SDK is built to strictly adhere to the **IETF Best Current Practi
 
 | Parameter     | Type      | Required | Description                                              |
 | :------------ | :-------- | :------: | :------------------------------------------------------- |
-| `publicKey`   | `string`  | **Yes**  | Your project's Identification Key from the dashboard.    |
+| `publicKey`   | `string`  | **Yes**  | Your project's public key from the Command Center.       |
+| `projectId`   | `string`  | **Yes**  | Your project's unique ID from the Command Center.        |
 | `redirectUri` | `string`  | **Yes**  | The URI your app redirects back to after authentication. |
 | `baseUrl`     | `string`  |    No    | Your API server URL (Default: Production).               |
 | `storage`     | `Storage` |    No    | Persistence layer (Default: `localStorage`).             |
