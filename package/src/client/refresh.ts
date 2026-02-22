@@ -70,24 +70,27 @@ export async function refreshTokens(): Promise<void> {
         throw new AuthError("Invalid JSON response from server");
       }
 
-      if (!data.success || !data.accessToken || !data.refreshToken) {
+      // Backend wraps as {success, message, data: {accessToken, ...}} — unwrap if needed
+      const tokenData = (data && data.success && (data as any).data) ? (data as any).data : data;
+
+      if (!tokenData.accessToken || !tokenData.refreshToken) {
         console.error("Invalid token response:", data);
         throw new AuthError("Invalid token response from server");
       }
 
       // ✅ STORE NEW TOKENS
-      setAccessToken(data.accessToken);
-      setRefreshToken(data.refreshToken);
+      setAccessToken(tokenData.accessToken);
+      setRefreshToken(tokenData.refreshToken);
 
-      const expiresAt = data.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
+      const expiresAt = tokenData.expiresAt || (Date.now() + 24 * 60 * 60 * 1000);
       setExpiresAt(expiresAt);
 
       console.log("✓ Tokens refreshed successfully");
 
       if (onTokenRefresh) {
         onTokenRefresh({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
+          accessToken: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken,
           expiresAt,
         });
       }

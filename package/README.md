@@ -69,27 +69,41 @@ yarn add @authspherejs/sdk
 
 ### **1️⃣ Initialize the Global Handshake**
 
-Configure the AuthSphere singleton at the very root of your application (e.g., `main.ts` or `index.js`).
+Configure the AuthSphere singleton at the very root of your application (e.g., `main.ts` or `App.jsx`).
 
 ```typescript
 import AuthSphere from "@authspherejs/sdk";
 
 AuthSphere.initAuth({
-  publicKey: "YOUR_PROJECT_PUB_KEY", // Available in your Command Center
-  projectId: "YOUR_PROJECT_ID", // Available in your Command Center
-  redirectUri: window.location.origin + "/callback", // Target for post-auth return
-  baseUrl: "https://auth-sphere-6s2v.vercel.app", // The production engine URL
+  publicKey: "YOUR_PROJECT_PUB_KEY", // Available in your Dashboard
+  projectId: "YOUR_PROJECT_ID", // Available in your Dashboard
+  redirectUri: window.location.origin + "/callback",
+  baseUrl: "https://auth-sphere-6s2v.vercel.app",
 });
 ```
 
 ### **2️⃣ Initiate Identity Handshake**
 
-Trigger a social login with a single line. The SDK generates the cryptographic state and performs the redirect.
+Trigger a social login or local credentials flow.
 
 ```typescript
-// Support for 'google', 'github', 'discord'
+// Social Login (Google, GitHub, Discord)
 AuthSphere.redirectToLogin("google");
-AuthSphere.redirectToLogin("github");
+
+// Local Login with error handling for unverified users
+const onLogin = async (credentials) => {
+  try {
+    const res = await AuthSphere.loginLocal(credentials);
+    if (res?.redirect) window.location.href = res.redirect;
+  } catch (err) {
+    if (err instanceof AuthError && err.message.includes("not verified")) {
+      // Redirect to OTP verification if email isn't verified yet
+      navigate(
+        `/verify-otp?email=${credentials.email}&sdk_request=${err.sdk_request}`,
+      );
+    }
+  }
+};
 ```
 
 ### **3️⃣ Resolve the Handshake**
@@ -98,70 +112,61 @@ Inside your callback route (e.g., `/callback`), exchange the transient authoriza
 
 ```tsx
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AuthSphere from "@authspherejs/sdk";
 
 const Callback = () => {
   const navigate = useNavigate();
-  const processed = useRef(false); // Guard against double-execution in React Strict Mode
+  const [params] = useSearchParams();
+  const processed = useRef(false);
 
   useEffect(() => {
     if (processed.current) return;
     processed.current = true;
 
-    // Validates PKCE parameters and exchanges code for a secure session
+    // Handle verification requirement from social providers
+    if (params.get("error") === "email_not_verified") {
+      const email = params.get("email");
+      const sdkReq = params.get("sdk_request");
+      navigate(
+        `/verify-otp?email=${email}${sdkReq ? `&sdk_request=${sdkReq}` : ""}`,
+      );
+      return;
+    }
+
     AuthSphere.handleAuthCallback()
       .then(() => navigate("/dashboard"))
-      .catch((err) => console.error("Handshake Failed:", err.message));
-  }, [navigate]);
+      .catch((err) => console.error("Handshake Failed:", err));
+  }, [navigate, params]);
 
   return <div>Authenticating...</div>;
 };
 ```
 
-### **4️⃣ Handle Local Credentials**
+### **4️⃣ Identity Challenges (OTP & Registration)**
 
-For applications requiring custom signup flows with integrated verification cycles.
+For flows requiring Email/Password verification cycles.
 
 ```tsx
-import AuthSphere, { AuthError } from "@authspherejs/sdk";
-
-// Email/Password Login
-const handleLogin = async ({ email, password }) => {
-  try {
-    const res = await AuthSphere.loginLocal({ email, password });
-    if (res && res.redirect) {
-      window.location.href = res.redirect;
-    }
-  } catch (err) {
-    if (err instanceof AuthError && err.message.includes("not verified")) {
-      // sdk_request preserves the original OAuth context across redirects
-      navigate(`/verify-otp?email=${email}&sdk_request=${err.sdk_request}`);
-    } else {
-      setError(err.message);
-    }
-  }
-};
-
 // Registration
-const handleRegister = async ({ email, password, username }) => {
-  await AuthSphere.register({ email, password, username });
-  navigate(`/verify-otp?email=${email}`);
+const onSignUp = async (data) => {
+  await AuthSphere.register(data);
+  navigate(`/verify-otp?email=${data.email}`);
 };
 
 // OTP Verification
-const handleVerifyOTP = async ({ email, otp, sdk_request }) => {
-  const res = await AuthSphere.verifyOTP({ email, otp, sdk_request });
-  if (res && res.redirect) {
+const onVerify = async (otpValue) => {
+  const res = await AuthSphere.verifyOTP({
+    email,
+    otp: otpValue,
+    sdk_request: sdkReq,
+  });
+
+  if (res?.redirect) {
     window.location.href = res.redirect;
   } else {
-    navigate("/dashboard");
+    navigate(sdkReq ? "/dashboard" : "/login");
   }
-};
-
-// Logout
-const handleLogout = () => {
-  AuthSphere.logout();
-  navigate("/login");
 };
 ```
 
