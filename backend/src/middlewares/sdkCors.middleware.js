@@ -15,7 +15,6 @@
  * the global CORS handler.
  */
 
-import cors from "cors";
 import Project from "../models/project.model.js";
 import logger from "../utils/logger.js";
 
