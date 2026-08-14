@@ -8,7 +8,6 @@ import bcrypt from "bcryptjs";
 import { sendVerificationOTP } from "./email.service.js";
 import { logEvent } from "../../utils/auditLogger.js";
 import { triggerWebhook } from "../../utils/webhookSender.js";
-import { emitEvent } from "../core/socket.service.js";
 import redisService from "../core/redis.service.js";
 
 class SDKService {
@@ -43,8 +42,13 @@ class SDKService {
       throw new Error("Redirect URI not registered");
 
     const projectProvidersLower = project.providers.map((p) => p.toLowerCase());
-    if (!projectProvidersLower.includes(provider.toLowerCase()))
-      throw new Error(`${provider} not enabled`);
+    if (!projectProvidersLower.includes(provider.toLowerCase())) {
+      const error = new Error(`${provider} not enabled for project ${project.name}`);
+      error.isProviderNotEnabled = true;
+      error.provider = provider;
+      error.projectName = project.name;
+      throw error;
+    }
 
     return project;
   }
